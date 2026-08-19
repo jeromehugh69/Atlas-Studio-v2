@@ -1,0 +1,7 @@
+interface:
+  display_name: "Development Lifecycle"
+  short_description: "Govern platform changes through every gate"
+  default_prompt: "Use $development-lifecycle to review this change request and identify the next governed action."
+
+policy:
+  allow_implicit_invocation: true

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Atlas Request Intake"
+  short_description: "Turn requests into clear governed actions"
+  default_prompt: "Use $atlas-request-intake to receive my request, reuse known context, and route any required approval."

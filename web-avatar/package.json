@@ -1,0 +1,8 @@
+{
+  "private": true,
+  "dependencies": {
+    "@met4citizen/headtts": "1.3.0",
+    "@met4citizen/talkinghead": "1.7.0",
+    "three": "0.180.0"
+  }
+}

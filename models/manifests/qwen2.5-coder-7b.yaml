@@ -1,0 +1,8 @@
+id: qwen2.5-coder:7b
+provider: ollama
+purpose: local-code-generation
+distribution: reference-only
+weights_bundled: false
+install: ollama pull qwen2.5-coder:7b
+notes: Used by Forge when explicitly selected. Weights are never bundled by Atlas Studio.
+

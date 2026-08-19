@@ -1,0 +1,2 @@
+"""Atlas Studio standalone platform."""
+

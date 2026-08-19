@@ -1,0 +1,7 @@
+id: qwen3:4b
+provider: ollama
+purpose: governed-local-tool-calling-and-code-change-proposals
+distribution: reference-only
+weights_bundled: false
+install: ollama pull qwen3:4b
+notes: Default Forge model. It may inspect isolated plan workspaces and propose multi-file diffs; execution remains behind one-time user approvals.

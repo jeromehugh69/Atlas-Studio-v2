@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Atlas AI Assistant</title>
+  <link rel="stylesheet" href="/static/atlas-chat-panel.css">
+</head>
+<body data-atlas-state="standby">
+  <main class="atlas-cockpit">
+    <header class="cockpit-header">
+      <button id="stage" class="atlas-presence" type="button" aria-label="Start a voice conversation with Atlas" aria-pressed="false">
+        <img id="portrait" src="/static/avatars/references/atlas_portrait.png" alt="Atlas">
+        <img id="mouthMotion" src="/static/avatars/references/atlas_portrait.png" alt="" aria-hidden="true">
+        <span class="atlas-mark" aria-hidden="true">A</span>
+        <span class="presence-glow" aria-hidden="true"></span>
+        <span class="voice-ring" aria-hidden="true"></span>
+        <span class="thinking-orbit" aria-hidden="true"></span>
+      </button>
+      <div class="cockpit-title">
+        <span class="section-kicker">ENGINEERING INTELLIGENCE</span>
+        <h1>ATLAS AI ASSISTANT</h1>
+        <span id="avatarState" class="avatar-state"><i></i><span>AI ONLINE</span></span>
+      </div>
+      <button id="clearButton" class="clear-button" type="button">Clear feed</button>
+    </header>
+
+    <section class="status-rail" aria-label="Atlas status">
+      <span class="status-title">ATLAS STATUS</span>
+      <span><i class="online"></i> AI Online</span>
+      <span>Model: <b id="modelStatus">Atlas Engineering</b></span>
+      <span>Context: <b id="contextStatus">42%</b></span>
+      <span>Voice: <b id="voiceReadyStatus">Ready</b></span>
+      <span>Tools: <b>Connected</b></span>
+      <span>Workspace: <b>OpenManus Studio</b></span>
+    </section>
+
+    <section class="engineering-context" aria-label="Engineering context">
+      <div><small>CURRENT WORKSPACE</small><strong>OpenManus / Studio</strong></div>
+      <div><small>ACTIVE TASK</small><strong>Tool API Architecture</strong></div>
+      <div class="tool-context"><small>CONNECTED TOOLS · READ-ONLY</small><strong>Terminal · Files · Git · Browser · Runtime</strong></div>
+    </section>
+
+    <section class="assistant-feed">
+      <div class="feed-heading">
+        <div><span class="live-pulse"></span><strong>LIVE ASSISTANT FEED</strong></div>
+        <span>STREAMING · LOCAL</span>
+      </div>
+      <div id="transcript" class="transcript" aria-label="Conversation transcript" aria-live="polite"></div>
+      <div class="process-indicator" role="status" aria-label="Atlas is processing"><i></i><b></b><b></b><b></b></div>
+    </section>
+
+    <section class="interaction-dock">
+      <div class="engineer-composer">
+        <div class="composer-heading">
+          <div><span class="section-kicker">ENGINEER INPUT</span><strong>Direct Atlas</strong></div>
+          <div class="context-meter" title="Available workspace context">
+            <span>AI CONTEXT</span><i><b id="contextMeter"></b></i><strong id="contextUsage">42%</strong>
+          </div>
+        </div>
+        <div id="attachmentTray" class="attachment-tray" hidden></div>
+        <form id="composer" class="composer">
+          <textarea id="textInput" rows="3" autocomplete="off" placeholder="Ask Atlas to inspect, build, modify, or explain..." aria-label="Message Atlas"></textarea>
+          <div class="composer-actions">
+            <div class="attachment-actions">
+              <input id="fileInput" type="file" accept=".txt,.md,.json,.csv,.pdf,.rtf,.odt,.docx,.xlsx,.pptx,.png,.jpg,.jpeg,.webp" multiple hidden>
+              <input id="codeInput" type="file" accept=".py,.js,.ts,.tsx,.jsx,.html,.css,.yaml,.yml,.toml,.sql,.sh,.ps1,.txt,.md,.json" multiple hidden>
+              <button id="attachButton" class="tool-button" type="button" title="Attach images or documents" aria-label="Attach images or documents"><span>&#128206;</span> Files</button>
+              <button id="codeButton" class="tool-button" type="button" title="Attach code or workspace context" aria-label="Attach code or workspace context"><span>&lt;/&gt;</span> Code / context</button>
+            </div>
+            <span class="shortcut">CTRL / &#8984; + &#8629;</span>
+            <button id="sendButton" class="send-button" type="submit"><span>Send</span><b>&#10148;</b></button>
+          </div>
+        </form>
+        <p class="example-prompt">Example: “Inspect the authentication flow and explain why the developer tool creation request returns 403.”</p>
+      </div>
+
+      <aside class="voice-test" aria-label="Test voice with Atlas">
+        <header><span class="section-kicker">VOICE TEST</span><strong>TEST VOICE WITH ATLAS</strong></header>
+        <div class="voice-session-state">
+          <span id="voiceSessionLabel">VOICE READY</span>
+          <time id="voiceElapsed">00:00</time>
+        </div>
+        <button id="micButton" class="voice-orb" type="button">
+          <span class="orb-core" aria-hidden="true">&#127908;</span>
+          <strong>Start Voice Test</strong>
+        </button>
+        <div id="voiceWaveform" class="waveform" aria-hidden="true">
+          <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+        </div>
+        <p id="voiceStatus">Microphone standing by</p>
+        <p id="sessionHint">Press once to begin a continuous local voice session.</p>
+        <div class="voice-actions">
+          <button id="muteButton" type="button" disabled>Mute</button>
+          <button id="endVoiceButton" type="button" disabled>End session</button>
+        </div>
+      </aside>
+    </section>
+
+    <p class="privacy-note"><span></span> LOCAL-FIRST SESSION · VOICE, FILES, AND WORKSPACE CONTEXT REMAIN ON THIS MACHINE</p>
+  </main>
+  <dialog id="atlasApprovalDialog" class="atlas-approval-dialog" aria-labelledby="atlasApprovalTitle">
+    <form id="atlasApprovalForm">
+      <header><span class="section-kicker">USER AUTHORIZATION</span><button id="closeAtlasApproval" type="button" aria-label="Close approval">&times;</button></header>
+      <h2 id="atlasApprovalTitle">Approve Atlas request</h2>
+      <p id="atlasApprovalPurpose"></p>
+      <div class="atlas-approval-scope"><small>THIS APPROVAL WILL</small><strong>Create a governed change plan and begin read-only specialist review.</strong><small>THIS APPROVAL WILL NOT</small><strong>Write code, apply a diff, run commands, or deploy.</strong></div>
+      <label>One-time approval code <output id="atlasApprovalChallenge">000000</output><input id="atlasApprovalPasscode" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code" required placeholder="Enter the six-digit code"></label>
+      <footer><button id="deferAtlasApproval" type="button">Not now</button><button class="approve" type="submit">Approve request</button></footer>
+      <p id="atlasApprovalError" class="atlas-approval-error" role="alert"></p>
+    </form>
+  </dialog>
+  <script>if(new URLSearchParams(location.search).get('embedded')==='1')document.body.classList.add('embedded');</script>
+  <script type="module" src="/static/live-atlas.js"></script>
+</body>
+</html>

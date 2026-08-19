@@ -1,0 +1,4 @@
+interface:
+  display_name: "Atlas Platform Management"
+  short_description: "Manage Atlas records with guarded edits"
+  default_prompt: "Use $manage-atlas-platform to inspect or update an Atlas platform record through the correct approval workflow."

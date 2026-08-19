@@ -1,0 +1,9 @@
+id: qwen3:8b
+provider: ollama
+purpose: general-reasoning-and-agent-orchestration
+distribution: reference-only
+weights_bundled: false
+install: ollama pull qwen3:8b
+context_window: 40960
+notes: Review the upstream model license before commercial deployment or redistribution.
+

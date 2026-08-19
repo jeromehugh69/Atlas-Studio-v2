@@ -1,0 +1,433 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Atlas Studio</title>
+  <link rel="stylesheet" href="/static/styles.css">
+  <link rel="stylesheet" href="/static/chat.css">
+  <link rel="stylesheet" href="/static/workers.css">
+  <link rel="stylesheet" href="/static/response-loader.css">
+  <link rel="stylesheet" href="/static/avatar3d.css">
+  <link rel="stylesheet" href="/static/avatar-generator.css">
+  <link rel="stylesheet" href="/static/speaking-avatar.css">
+  <link rel="stylesheet" href="/static/dashboard-widgets.css">
+  <link rel="stylesheet" href="/static/developer-features.css">
+  <link rel="stylesheet" href="/static/atlas-widget.css">
+  <link rel="stylesheet" href="/static/user-guide.css">
+</head>
+<body class="atlas-widget-enabled command-active">
+  <header class="top-shell">
+    <button class="top-brand" type="button" data-view="command" aria-label="Open Atlas overview">
+      <span class="brand-mark" aria-hidden="true">A</span>
+      <span class="brand-copy">
+        <strong>ATLAS</strong>
+        <small>Advanced Tooling, Lifecycle Automation, and Security</small>
+        <em>Build smarter. Operate safer. Scale confidently.</em>
+      </span>
+    </button>
+    <nav class="top-navigation" aria-label="Atlas Studio categories">
+      <button class="top-overview active" data-view="command">Overview</button>
+      <details class="nav-category"><summary>Build</summary><div class="nav-menu"><small>ENGINEERING</small><button data-view="lifecycleGuide">Lifecycle Guide</button><button data-view="projects">Projects</button><button data-view="workspace">Workspace Explorer</button><button data-view="codeView">Code</button><button data-view="plans">Plans</button><button data-view="tasksView">Tasks</button><button data-view="implementation">Implementation</button></div></details>
+      <details class="nav-category"><summary>Intelligence</summary><div class="nav-menu"><small>AGENTS &amp; KNOWLEDGE</small><button data-view="library">Library</button><button data-view="agents">Agents</button><button data-view="plugins">Plugins &amp; Skills</button><button data-view="workflows">Workflows</button><button data-view="toolsView">Tool Library</button><button data-view="knowledge">Knowledge</button><button data-view="sources">Sources of Truth</button></div></details>
+      <details class="nav-category"><summary>Assurance</summary><div class="nav-menu"><small>SECURITY &amp; QUALITY</small><button data-view="security">Security</button><button data-view="qa">QA</button><button data-view="operations">Activity</button><button data-view="analytics">Metrics</button></div></details>
+      <details class="nav-category"><summary>Experience</summary><div class="nav-menu"><small>INTERFACES</small><button data-view="workers">Workers</button><a href="/static/avatar-station.html">Avatar Lab</a></div></details>
+      <button data-view="settings">Settings</button>
+      <button data-view="manual">Help</button>
+    </nav>
+    <div class="top-utilities">
+      <span class="top-local"><i></i><span><strong>Local-first</strong><small>Community mode</small></span></span>
+      <details class="lifecycle-notification-menu">
+        <summary aria-label="Open lifecycle notifications"><span aria-hidden="true">&#128276;</span><b id="lifecycleNotificationCount">0</b></summary>
+        <div class="lifecycle-notification-popover"><header><div><small>NEXT STEPS</small><strong>Lifecycle notifications</strong></div><button type="button" data-open-view="lifecycleGuide">Open guide</button></header><div id="lifecycleNotificationMenu"><p>Loading next actions...</p></div></div>
+      </details>
+      <button id="topKill" class="top-kill" type="button" title="Stop all agent execution" aria-label="Stop all agents">■</button>
+      <details class="profile-menu">
+        <summary aria-label="Open user profile"><span class="profile-logo">JH</span><span class="profile-copy"><strong>Jerome H.</strong><small>Platform owner</small></span></summary>
+        <div class="profile-dropdown"><header><span class="profile-logo large">JH</span><div><strong>Jerome H.</strong><small>Local platform owner</small></div></header><button type="button" data-open-view="settings">Profile &amp; account</button><button type="button" data-open-view="settings">Users &amp; access</button><button type="button" data-open-view="settings">Settings</button><span><i></i> Community mode · local session</span></div>
+      </details>
+    </div>
+  </header>
+  <aside class="app-sidebar">
+    <div class="brand command-brand">
+      <span class="brand-mark" aria-hidden="true">A</span>
+      <div><span>ATLAS</span><small>AI ENGINEERING COMMAND CENTER</small></div>
+    </div>
+
+    <section class="command-only workspace-switcher" aria-label="Current workspace">
+      <small>WORKSPACE</small>
+      <strong>OpenManus / Studio <span>⌄</span></strong>
+      <small>ACTIVE PROJECT</small>
+      <p><i></i> Tool API Architecture <b></b></p>
+    </section>
+
+    <nav aria-label="Atlas Studio sections">
+      <button class="active" data-view="command">Dashboard</button>
+      <button data-view="lifecycleGuide">Lifecycle</button>
+      <button data-view="projects">Projects</button>
+      <button data-view="workspace">Workspace</button>
+      <button data-view="library">Library</button>
+      <button data-view="agents">Agents</button>
+      <button data-view="plugins">Plugins</button>
+      <button data-view="toolsView">Tools</button>
+      <button data-view="knowledge">Knowledge</button>
+      <button data-view="analytics">Analytics</button>
+      <button data-view="settings">Settings</button>
+      <button data-view="manual">User Manual</button>
+    </nav>
+
+    <section class="command-only command-agent-panel" aria-label="AI agents">
+      <header><span>AI AGENTS</span><strong>ONLINE <b id="commandAgentCount">0</b></strong></header>
+      <div id="commandAgents" class="command-agents"><p class="muted">Loading local agents.</p></div>
+    </section>
+
+    <section class="sidebar-profile" aria-label="Signed-in profile">
+      <div class="sidebar-profile-head"><span class="profile-logo">JH</span><div><strong>Jerome H.</strong><small>Platform owner</small></div><button type="button" data-open-view="settings" aria-label="Open profile settings">&#9881;</button></div>
+      <p><i></i> Online</p>
+      <footer><button type="button" data-open-view="settings" title="Settings">&#9881;</button><button type="button" data-open-view="security" title="Security">&#9671;</button><button type="button" data-open-view="manual" title="User manual">?</button><button type="button" title="Local dark appearance">&#9790;</button></footer>
+    </section>
+
+    <div class="local"><i></i><div><strong>Local-first</strong><small id="mode">Community mode</small></div></div>
+  </aside>
+
+  <main class="app-main">
+    <header class="page-header">
+      <div><p class="eyebrow">SYNTHETIC INTELLIGENCE PLATFORM</p><h1 id="title">Command center</h1></div>
+      <div class="page-header-actions"><button id="contextHelp" class="context-help" type="button">? How to use this page</button><button id="kill" class="danger">Stop all agents</button></div>
+    </header>
+
+    <section id="command" class="view active">
+      <div class="command-site-links" aria-label="Platform destinations">
+        <span>PLATFORM</span>
+        <button type="button" data-open-view="projects">Projects</button>
+        <button type="button" data-open-view="library">Library</button>
+        <button type="button" data-open-view="agents">AI Agents</button>
+        <button type="button" data-open-view="plugins">Plugins &amp; Skills</button>
+        <button type="button" data-open-view="workspace">Workspace Explorer</button>
+        <button type="button" data-open-view="toolsView">Tool Library</button>
+        <button type="button" data-open-view="workflows">Workflows</button>
+        <button type="button" data-open-view="security">Security</button>
+        <button type="button" data-open-view="sources">Sources of Truth</button>
+        <button type="button" data-open-view="qa">QA</button>
+        <button type="button" data-open-view="sandbox">Sandbox</button>
+        <button type="button" data-open-view="analytics">Metrics</button>
+        <button type="button" data-open-view="settings">Settings</button>
+        <a href="/static/avatar-station.html">Avatar Lab</a>
+        <a href="/api/docs" target="_blank" rel="noopener">API Docs</a>
+        <button id="addAgentFromDashboard" class="add-agent-link" type="button">+ Add agent</button>
+      </div>
+      <div class="dashboard-layout-tools"><span id="dashboardLayoutStatus">Drag the card headers to reorganize Overview.</span><button id="resetDashboardLayout" type="button">Reset card order</button></div>
+      <div class="command-cockpit">
+        <section class="assistant-workspace" aria-label="Atlas AI Assistant">
+          <iframe id="atlasCommandFrame" title="Atlas AI Assistant" allow="microphone; autoplay" src="/static/atlas-chat-panel.html?embedded=1"></iframe>
+        </section>
+
+        <div id="commandDashboard" class="command-rail" aria-label="Reorderable Overview cards">
+          <section class="rail-panel orchestrator-panel dashboard-widget" data-widget-id="task-orchestrator">
+            <header><button class="widget-handle" type="button" aria-label="Move Task Orchestrator card" aria-grabbed="false"><span>TASK ORCHESTRATOR</span><b aria-hidden="true">&#8942;&#8942;</b></button><span>AI</span></header>
+            <div class="orchestrator-map" aria-label="Task orchestration flow">
+              <span class="flow-node user-node">You</span><i></i>
+              <span class="flow-node atlas-node"><b>A</b> Atlas AI Assistant</span><i></i>
+              <span class="flow-node developer-node"><b>F</b> Forge · Platform Developer</span>
+              <div class="agent-branches"><span>⌁</span><span>◈</span><span>▤</span><span>⌘</span></div>
+              <i></i><span class="flow-node result-node">Results &amp; Analysis</span>
+            </div>
+          </section>
+
+          <section class="rail-panel activity-panel dashboard-widget" data-widget-id="active-tasks">
+            <header><button class="widget-handle" type="button" aria-label="Move Active Tasks card" aria-grabbed="false"><span>ACTIVE TASKS</span><b aria-hidden="true">&#8942;&#8942;</b></button><span class="rail-live">LIVE</span></header>
+            <div id="activity" class="activity"><p class="muted">No tasks running. Atlas is ready.</p></div>
+          </section>
+
+          <section class="rail-panel system-panel dashboard-widget" data-widget-id="atlas-status">
+            <header><button class="widget-handle" type="button" aria-label="Move Atlas Status card" aria-grabbed="false"><span>ATLAS STATUS</span><b aria-hidden="true">&#8942;&#8942;</b></button><span class="status-light"></span></header>
+            <dl>
+              <div><dt>AI Assistant</dt><dd>Online</dd></div>
+              <div><dt>Edition</dt><dd id="commandMode">Community</dd></div>
+              <div><dt>Tasks in Progress</dt><dd id="commandTaskCount">0</dd></div>
+              <div><dt>Context Usage</dt><dd>42%</dd></div>
+              <div><dt>Connected Tools</dt><dd>Terminal · Files · Git · Browser</dd></div>
+              <div><dt>System Load</dt><dd id="commandHealth">Checking</dd></div>
+              <div><dt>Model</dt><dd id="commandModel">Loading</dd></div>
+            </dl>
+          </section>
+        </div>
+      </div>
+
+      <div class="chat-shell command-chat-bridge" hidden aria-hidden="true">
+        <select id="agent" aria-label="Select agent"></select>
+        <div id="messages" class="messages"><div class="empty-chat"></div></div>
+        <form id="chatForm"><textarea id="prompt" required></textarea><button>Send</button></form>
+      </div>
+    </section>
+
+    <section id="workspace" class="view developer-page workspace-browser-page">
+      <div class="feature-heading"><div><p class="eyebrow">CURRENT WORKSPACE</p><h2>Workspace Explorer</h2><p>Browse the mounted project without leaving Atlas. Selecting a previewable file opens it in the Code workspace.</p></div><span class="feature-counter">READ-ONLY MOUNT</span></div>
+      <div class="workspace-view-grid">
+        <aside class="file-explorer" aria-label="Project files"><header><div><small>FILE EXPLORER</small><strong id="workspaceRootName">Workspace</strong></div><button id="refreshWorkspace" type="button" title="Refresh workspace" aria-label="Refresh workspace">&#8635;</button></header><div id="workspaceBreadcrumb" class="workspace-breadcrumb"><button type="button" data-workspace-path="">workspace</button></div><div id="workspaceTree" class="workspace-tree-live" role="tree" aria-live="polite"><p>Reading mounted workspace...</p></div><footer><button type="button" disabled>Outline</button><button type="button" disabled>Timeline</button></footer></aside>
+        <article class="panel"><h3>Workspace overview</h3><div class="overview-metrics"><div><small>PRIMARY BRANCH</small><strong>Local workspace</strong></div><div><small>ACCESS MODEL</small><strong>User → Atlas → Forge</strong></div><div><small>ARTIFACT STORAGE</small><strong>Local filesystem</strong></div><div><small>EXECUTION</small><strong>Isolated sandbox</strong></div></div></article>
+      </div>
+    </section>
+
+    <section id="projects" class="view developer-page">
+      <div class="feature-heading"><div><p class="eyebrow">DELIVERY PORTFOLIO</p><h2>Projects</h2><p>Projects are derived from approved plans, isolated workspaces, and lifecycle evidence—one source of truth, not a duplicate tracker.</p></div><button class="feature-primary" type="button" data-open-view="plans">+ Request project plan</button></div>
+      <div id="projectDirectory" class="project-directory" aria-live="polite"></div>
+    </section>
+
+    <section id="tasksView" class="view developer-page">
+      <div class="feature-heading"><div><p class="eyebrow">DEVELOPER WORK QUEUE</p><h2>Tasks</h2><p>Live work delegated through Atlas and governed by agent authorization.</p></div><span id="featureTaskCount" class="feature-counter">0 TASKS</span></div>
+      <form id="taskCreateForm" class="feature-panel compact-create-form"><label>Task title<input id="taskTitle" required maxlength="200"></label><label>Agent<select id="taskAgent" required></select></label><label>Priority<select id="taskPriority"><option value="normal">Normal</option><option value="high">High</option><option value="critical">Critical</option><option value="low">Low</option></select></label><label class="wide">Instructions<textarea id="taskPrompt" required maxlength="50000" rows="3"></textarea></label><button class="feature-primary" type="submit">Add task</button></form>
+      <div id="developerTaskBoard" class="lifecycle-board" aria-live="polite"></div>
+    </section>
+
+    <section id="plans" class="view developer-page">
+      <div class="feature-heading"><div><p class="eyebrow">HUMAN APPROVAL GATE</p><h2>Plans</h2><p>Atlas proposals remain reviewable before an implementation agent receives authority.</p></div><span class="feature-counter">USER CONTROLLED</span></div>
+      <div class="trace-pipeline" aria-label="Plan approval workflow"><span>User request</span><i></i><span>Atlas plan</span><i></i><span>Source review</span><i></i><span class="gate">Your approval</span><i></i><span>Forge</span></div>
+      <form id="planCreateForm" class="feature-panel compact-create-form"><label>Plan title<input id="planTitle" required maxlength="200"></label><label>Implementation agent<select id="planAgent" required></select></label><label>Priority<select id="planPriority"><option value="high">High</option><option value="critical">Critical</option><option value="normal">Normal</option><option value="low">Low</option></select></label><label class="wide">Requested outcome<textarea id="planRequest" required minlength="5" maxlength="50000" rows="4"></textarea></label><button class="feature-primary" type="submit">Request plan</button></form>
+      <div id="planWorkspace" class="plan-list"></div>
+    </section>
+
+    <section id="lifecycleGuide" class="view developer-page lifecycle-guide-page">
+      <div class="feature-heading"><div><p class="eyebrow">USER-CONTROLLED CHANGE DELIVERY</p><h2>Development Lifecycle Progress Guide</h2><p>Follow every platform change from recommendation through monitored Production. Forge cannot write until you approve its recommendation and exact code diff.</p></div><span id="lifecycleGuideSummary" class="feature-counter">LOADING</span></div>
+      <section class="lifecycle-next-step-panel"><header><div><small>YOUR NEXT REQUIRED ACTIONS</small><h3>What needs your attention</h3></div><button id="refreshLifecycleGuide" type="button">Refresh</button></header><div id="lifecycleGuideNotifications" class="lifecycle-guide-notifications"><p>Reading governed lifecycle state...</p></div></section>
+      <div id="lifecycleGuideBoard" class="lifecycle-guide-board" aria-live="polite"></div>
+    </section>
+
+    <section id="implementation" class="view developer-page">
+      <div class="feature-heading"><div><p class="eyebrow">CONTROLLED DELIVERY</p><h2>Implementation</h2><p>Trace every approved change from request through code, validation, and release authorization.</p></div><span class="feature-counter">TRACEABLE</span></div>
+      <div class="trace-pipeline implementation-trace" aria-label="Implementation traceability"><span>User request</span><i></i><span>Atlas plan</span><i></i><span>Source</span><i></i><span>Agent decision</span><i></i><span>Code</span><i></i><span>Test</span><i></i><span>QA</span><i></i><span>Sandbox</span><i></i><span class="gate">Production approval</span></div>
+      <div class="implementation-console-grid">
+        <form id="workerActionForm" class="feature-panel worker-console">
+          <header><div><small>REAL EXECUTION WORKER</small><h3>Forge workspace action</h3></div><span id="workerConnectionState">CHECKING</span></header>
+          <p>Preview changes first. File writes and code execution require your explicit authorization for this action.</p>
+          <div class="worker-form-grid">
+            <label>Implementation agent<select id="workerAgent" required></select></label>
+            <label>Action<select id="workerAction"><option value="preview_write">Preview file change</option><option value="file_write">Write approved file</option><option value="code_execute">Run approved code command</option><option value="test_execute">Run approved tests</option></select></label>
+            <label>Approved workspace<select id="workerWorkspace" required></select></label>
+            <label class="worker-path-field">Workspace path<input id="workerPath" placeholder="src/atlas_studio/example.py" required></label>
+          </div>
+          <label id="workerContentField">Proposed file contents<textarea id="workerContent" rows="8" spellcheck="false" placeholder="Complete replacement contents for the workspace file"></textarea></label>
+          <label id="workerCommandField" hidden>Command arguments<input id="workerCommand" placeholder="pytest tests/test_api.py -q"></label>
+          <label class="worker-authorization"><input id="workerAuthorized" type="checkbox" required> I authorize this exact Forge worker action in the local workspace.</label>
+          <footer><button id="previewWorkerAction" type="button">Preview</button><button class="feature-primary" type="submit">Run authorized action</button></footer>
+        </form>
+        <article class="feature-panel worker-result-panel"><header><div><small>WORKER EVIDENCE</small><h3>Result</h3></div><span id="workerResultState">NO ACTION</span></header><pre id="workerResult">A diff, command output, exit code, and file hashes will appear here.</pre></article>
+      </div>
+      <section class="forge-review-section" aria-labelledby="forgeReviewTitle">
+        <header class="forge-review-heading"><div><small>FORGE GOVERNED DELIVERY</small><h3 id="forgeReviewTitle">Proposed change sets</h3><p>Forge may inspect the isolated workspace and prepare a multi-file diff. Nothing is written, tested, or committed until you approve that exact action.</p></div><button id="refreshChangeSets" type="button">Refresh proposals</button></header>
+        <div class="forge-gate-strip" aria-label="Forge approval sequence"><span>Read workspace</span><i></i><span>Propose diff</span><i></i><span class="gate">Approve write</span><i></i><span class="gate">Approve tests</span><i></i><span class="gate">Approve commit</span></div>
+        <div id="forgeChangeSets" class="forge-change-sets" aria-live="polite"><div class="feature-empty"><strong>No Forge proposal loaded</strong><p>Approve a plan to assign Forge an isolated implementation workspace.</p></div></div>
+      </section>
+      <div id="implementationActivity" class="feature-list"></div>
+    </section>
+
+    <section id="codeView" class="view developer-page">
+      <div class="feature-heading"><div><p class="eyebrow">ENGINEERING WORKSPACE</p><h2>Code</h2><p>Workspace code access follows the selected agent's capability policy and task authorization.</p></div><span class="feature-counter">LOCAL WORKSPACE</span></div>
+      <div class="code-change-workbench"><div class="code-editor-shell"><header class="code-tabs"><div id="codeTab" class="code-tab"><span>CURRENT CODE</span><strong id="codeFileName">Select a file from Workspace Explorer</strong></div><div class="code-actions"><span id="codeLanguage">TEXT</span><span>READ-ONLY</span><button id="backToExplorer" type="button">Explorer</button></div></header><div id="codeBreadcrumb" class="code-breadcrumb">No file selected</div><div id="codeViewer" class="code-viewer"><div class="code-empty"><strong>Open a project file</strong><p>Choose a supported file in Workspace Explorer to display its current contents here.</p><button type="button" data-open-view="workspace">Open Workspace Explorer</button></div></div><footer class="code-status"><span id="codePosition">Ln 1, Col 1</span><span id="codeStats">0 lines &middot; 0 bytes</span><span>UTF-8</span><span>Local workspace</span></footer></div><aside class="code-diff-shell"><header><div><small>CODE DIFF</small><strong id="codeDiffName">No change selected</strong></div><span id="codeDiffState">READ-ONLY</span></header><pre id="codeDiffViewer">Select a file from a Forge change set on the Implementation page to compare the current code with its proposed diff.</pre><footer><span class="diff-add">+ additions</span><span class="diff-remove">− deletions</span><button type="button" data-open-view="implementation">Review change sets</button></footer></aside></div>
+      <div class="code-policy-strip"><span>Atlas has read-only visibility</span><span>Forge requires your authorization to edit</span><span>Sandbox execution is isolated</span><span>Production access remains separate</span></div>
+    </section>
+
+    <section id="workers" class="view developer-page">
+      <div class="workers-title"><div><p class="eyebrow">EMBODIED INTELLIGENCE</p><h2>Workers <span>by delos</span></h2><p>Visual identities for the agents operating inside Atlas Studio.</p></div><span class="worker-count">4 WORKERS</span></div>
+      <div class="worker-layout"><aside class="worker-roster" id="workerRoster"></aside><article class="worker-stage"><div class="worker-visual"><div class="worker-image-wrap"><canvas id="workerCanvas" aria-label="Interactive 3D Atlas worker avatar"></canvas><div id="modelLoader" class="model-loader"><span></span><strong>Initializing worker model</strong><small>atlas_worker.glb</small></div><div id="workerFallback" class="worker-fallback"><strong>A</strong><span>3D worker unavailable</span></div><span class="scan-line"></span><span class="drag-hint">Drag to rotate · scroll to zoom</span></div><div class="angle-strip"><button class="angle active" data-view="full">Full body</button><button class="angle" data-view="portrait">Portrait</button><button class="angle" data-view="left">Left profile</button><button class="angle" data-view="right">Right profile</button></div></div><div class="worker-profile"><p class="worker-index">WORKER 01</p><h3 id="workerName">Atlas</h3><p id="workerRole" class="worker-role">Platform Intelligence</p><p id="workerDescription"></p><div class="worker-status"><span></span><div><small>OPERATIONAL STATE</small><strong>Online · local runtime</strong></div></div><dl><div><dt>Access</dt><dd id="workerAccess">Read-only production visibility</dd></div><div><dt>Model</dt><dd>qwen3:8b · Ollama</dd></div><div><dt>Avatar</dt><dd>Local GLB · WebGL</dd></div></dl><div><small class="label">CONNECTED CAPABILITIES</small><div id="workerTools" class="tools"></div></div><details class="avatar-generator"><summary>Generate avatar locally from image</summary><form id="avatarForm"><p id="avatarAvailability">Checking local open-source worker...</p><input id="avatarImage" name="image" type="file" accept="image/png,image/jpeg" required><label class="consent"><input id="avatarConsent" name="consent" type="checkbox" required> I have permission to use this image. It stays on this machine.</label><button id="generateAvatar" type="submit">Generate local GLB with Atlas</button><div id="avatarProgress" class="avatar-progress" hidden><span></span><div><strong>Preparing local generation</strong><small>0%</small></div></div></form></details><button id="chatWithWorker" class="worker-action">Open conversation</button></div></article></div>
+    </section>
+
+    <section id="agents" class="view developer-page"><div class="section-head"><div><p class="eyebrow">CONTROL PLANE</p><h2>Named agents</h2></div><div class="agent-head-actions"><p>Choose the exact skills and tools each agent may use.</p><button id="addAgent" type="button">Add new agent</button></div></div><div id="agentCards" class="agent-grid"></div></section>
+
+    <section id="workflows" class="view developer-page">
+      <div class="feature-heading"><div><p class="eyebrow">LANGGRAPH OSS ORCHESTRATION</p><h2>Workflow Control Plane</h2><p>Organized, policy-first workflows replace direct agent-to-tool spaghetti with named layers, checkpoints, and evidence gates.</p></div><span id="workflowEngineState" class="feature-counter">CHECKING ENGINE</span></div>
+      <div class="platform-layer-map" aria-label="Atlas platform layers">
+        <article><small>01</small><strong>Experience</strong><span>Dashboard · voice · workspace</span></article>
+        <i></i><article><small>02</small><strong>API</strong><span>REST · WebSocket · validation</span></article>
+        <i></i><article class="active"><small>03</small><strong>Orchestration</strong><span>LangGraph · policy · checkpoints</span></article>
+        <i></i><article><small>04</small><strong>Security</strong><span>ACL · approvals · kill switch</span></article>
+        <i></i><article><small>05</small><strong>Agents</strong><span>Named specialist workflows</span></article>
+        <i></i><article><small>06</small><strong>Intelligence</strong><span>Models · memory · speech</span></article>
+        <i></i><article><small>07</small><strong>Execution</strong><span>Tools · rootless sandbox</span></article>
+        <i></i><article><small>08</small><strong>Data &amp; Ops</strong><span>Postgres · Redis · audit</span></article>
+      </div>
+      <div class="workflow-summary"><article class="feature-panel"><header><strong>Runtime</strong><span id="workflowCheckpointState">LOADING</span></header><dl id="workflowRuntimeDetails" class="feature-definition"></dl></article><article class="feature-panel"><header><strong>Governed task path</strong><span>ACTIVE</span></header><div class="workflow-path"><span>Policy</span><i></i><span>Model</span><i></i><span>Evidence</span></div><p class="workflow-note">The model is one workflow node. It does not control permissions, approvals, persistence, or completion rules.</p></article></div>
+      <div class="workflow-builder-grid">
+        <article class="feature-panel"><header><div><small>NO AUTHORITY GRANTED</small><h3>Request a workflow</h3></div><span>INTAKE</span></header><form id="workflowRequestForm" class="workflow-control-form"><label>Name<input id="workflowRequestName" required minlength="3" placeholder="R&D evaluation for a new capability"></label><label>Goal<textarea id="workflowRequestGoal" required minlength="10" placeholder="Describe the outcome, evidence, and decision this workflow must produce."></textarea></label><label>Owner<select id="workflowRequestOwner" required></select></label><label>References<input id="workflowRequestReferences" placeholder="One local skill, library, or URL per line"></label><button class="feature-primary" type="submit">Request workflow plan</button></form></article>
+        <article class="feature-panel"><header><div><small>PASSCODE APPROVAL REQUIRED</small><h3>Add a manual workflow</h3></div><span>REGISTRY</span></header><form id="workflowDefinitionForm" class="workflow-control-form"><div class="dialog-row"><label>Identifier<input id="workflowDefinitionId" required pattern="[a-z][a-z0-9-]{2,63}" placeholder="approved-rd-pilot"></label><label>Name<input id="workflowDefinitionName" required minlength="3" placeholder="Approved R&D pilot"></label></div><div class="dialog-row"><label>Owner<select id="workflowDefinitionOwner" required></select></label><label>Source<select id="workflowSourceType"><option value="manual">Manual</option><option value="local_library">Local library</option><option value="existing_skill">Existing skill</option><option value="external_resource">External resource reference</option></select></label></div><label>Description<textarea id="workflowDefinitionDescription" required minlength="10" placeholder="Purpose, boundaries, expected evidence, and approval gates."></textarea></label><label>Nodes<input id="workflowDefinitionNodes" required placeholder="scope, research, approve, prototype, test, decide"></label><label>Source reference<input id="workflowSourceReference" placeholder="Local package, skill name, or reviewed URL"></label><p class="feature-notice">External references are recorded as untrusted metadata. Atlas Studio does not download or execute them automatically.</p><button class="feature-primary" type="submit">Approve and register definition</button></form></article>
+      </div>
+      <div id="workflowDefinitions" class="workflow-definition-grid" aria-live="polite"></div>
+      <div class="governance-dashboard">
+        <article class="feature-panel"><header><div><small>START-TO-FINISH ACCEPTANCE</small><h3>Lifecycle test case</h3></div><span id="lifecycleCaseState">LOADING</span></header><div id="lifecycleAcceptance" class="governance-list"></div></article>
+        <article class="feature-panel"><header><div><small>GROUNDING POLICY</small><h3>Hallucination controls</h3></div><span>ENFORCED</span></header><div id="hallucinationControls" class="governance-list"></div></article>
+        <article class="feature-panel governance-wide"><header><div><small>ACCOUNTABILITY</small><h3>Audit coverage</h3></div><span id="auditCoverageState">CHECKING</span></header><div id="auditCoverage" class="audit-coverage-grid"></div><p id="auditCoverageNote" class="workflow-note"></p></article>
+      </div>
+    </section>
+
+    <section id="security" class="view developer-page">
+      <div class="feature-heading"><div><p class="eyebrow">ZERO-TRUST CONTROL PLANE</p><h2>Security</h2><p>See which controls are enforced by Atlas Studio itself, which are planned, and where user authorization is required.</p></div><span id="securityPostureState" class="feature-counter">CHECKING POSTURE</span></div>
+      <div class="security-trust-flow" aria-label="Security trust flow"><span>User</span><i></i><span>API policy</span><i></i><span>Atlas plan</span><i></i><span class="security-gate">Approval gate</span><i></i><span>Specialist</span><i></i><span>Sandbox</span><i></i><span>Evidence</span></div>
+      <div class="security-overview-grid">
+        <article class="feature-panel security-sentinel"><header><strong>SENTINEL · SECURITY ENGINEERING</strong><span>READ-ONLY</span></header><h3 id="sentinelRole">Security Engineering</h3><p id="sentinelDescription">Loading Sentinel policy...</p><div id="sentinelTools" class="detail-tags"></div></article>
+        <article class="feature-panel"><header><strong>Control summary</strong><span id="securityControlCount">0 CONTROLS</span></header><dl id="securityControlSummary" class="feature-definition"></dl></article>
+      </div>
+      <div id="securityLayers" class="security-layer-grid" aria-live="polite"></div>
+      <section class="security-events"><header><div><small>AUDIT TRAIL</small><strong>Recent security and control activity</strong></div><button id="refreshSecurity" type="button">Refresh posture</button></header><div id="securityAuditEvents" class="feature-list"></div></section>
+    </section>
+
+    <section id="toolsView" class="view developer-page">
+      <div class="feature-heading"><div><p class="eyebrow">CAPABILITY CONTROL</p><h2>Tool Library</h2><p>Discover registered Atlas capabilities, inspect their trust and permissions, and request governed access.</p></div><span id="toolLibraryCount" class="feature-counter">LOADING</span></div>
+      <div class="feature-toolbar"><input id="toolSearch" type="search" placeholder="Search registered tools..." aria-label="Search tools"><select id="toolCategory" aria-label="Tool category"><option value="">All categories</option></select></div>
+      <div class="tool-library-summary"><span><strong id="toolAssignedTotal">0</strong> assignments</span><span><strong id="toolRestrictedTotal">0</strong> restricted capabilities</span><span><strong>Platform registry</strong> is the inventory source</span></div>
+      <div id="toolDirectory" class="tool-library-grid" aria-live="polite"></div>
+    </section>
+
+    <section id="library" class="view developer-page">
+      <div class="feature-heading"><div><p class="eyebrow">REUSABLE PLATFORM ASSETS</p><h2>Library</h2><p>One index for registered tools, local skills, approved knowledge, and governed projects. Each item opens its authoritative owner.</p></div><span id="librarySummary" class="feature-counter">LOADING</span></div>
+      <div id="libraryDirectory" class="project-directory" aria-live="polite"></div>
+    </section>
+
+    <section id="plugins" class="view developer-page">
+      <div class="feature-heading"><div><p class="eyebrow">LOCAL EXTENSIONS</p><h2>Plugins &amp; Skills</h2><p>Inspect bundled, offline Atlas capabilities. Skill source remains local and changes flow through Forge review.</p></div><span id="pluginCount" class="feature-counter">LOADING</span></div>
+      <div id="pluginDirectory" class="tool-library-grid" aria-live="polite"></div>
+    </section>
+
+    <section id="knowledge" class="view developer-page">
+      <div class="feature-heading"><div><p class="eyebrow">AUTHORITATIVE RETRIEVAL</p><h2>Knowledge</h2><p>Search approved local sources and inspect provenance before using them in an engineering decision.</p></div><span class="feature-counter">LOCAL-FIRST</span></div>
+      <div class="feature-toolbar knowledge-toolbar"><input id="knowledgeSearch" type="search" placeholder="Search authoritative knowledge..." aria-label="Search authoritative knowledge"><select id="knowledgeCategory" aria-label="Knowledge category"><option value="">All source categories</option></select><button id="runKnowledgeSearch" type="button">Search</button></div>
+      <div id="knowledgeResults" class="knowledge-results" aria-live="polite"></div>
+    </section>
+
+    <section id="sources" class="view developer-page">
+      <div class="feature-heading"><div><p class="eyebrow">GOVERNED KNOWLEDGE</p><h2>Sources of Truth</h2><p>Authoritative requirements, approved organizational material, and provenance-aware engineering context.</p></div><button id="requestSourceButton" class="feature-primary" type="button">Request source addition</button></div>
+      <div class="source-layout">
+        <article class="feature-panel hierarchy-panel"><header><strong>Configurable authority hierarchy</strong><span>PRECEDENCE</span></header><ol class="source-hierarchy"><li>Applicable law and regulation</li><li>Official government sources</li><li>Regulators and standards organizations</li><li>Organization policies and procedures</li><li>Approved internal documentation</li><li>Applicable compliance requirements</li><li>Official vendor documentation</li><li>Other verified sources</li><li>General web and unverified information</li></ol><p>Atlas flags conflicts instead of silently choosing a source. Task scope and jurisdiction determine applicable precedence.</p></article>
+        <article class="feature-panel"><header><strong>Source health</strong><span id="sourceHealthSummary">CHECKING</span></header><div id="sourceHealth" class="source-health"></div></article>
+      </div>
+      <div class="compliance-trace" aria-label="Compliance traceability"><span>Source</span><i></i><span>Requirement</span><i></i><span>Control</span><i></i><span>Policy</span><i></i><span>Code</span><i></i><span>Test</span><i></i><span>Evidence</span></div>
+    </section>
+
+    <section id="qa" class="view developer-page">
+      <div class="feature-heading"><div><p class="eyebrow">QUALITY GATES</p><h2>QA</h2><p>Unit, integration, regression, security, and performance validation before sandbox confirmation.</p></div><span class="feature-counter">GATED</span></div>
+      <div id="qaGates" class="gate-grid"></div>
+      <div id="lifecycleBoard" class="plan-list" aria-live="polite"></div>
+    </section>
+
+    <section id="sandbox" class="view developer-page">
+      <div class="feature-heading"><div><p class="eyebrow">ISOLATED VALIDATION</p><h2>Sandbox</h2><p>Approved implementation work runs with resource limits and network denied by default.</p></div><span class="feature-counter">NETWORK: NONE</span></div>
+      <div class="environment-cards"><article class="feature-panel"><header><strong>Execution policy</strong><span>ROOTLESS</span></header><dl class="feature-definition"><div><dt>Runtime</dt><dd>Docker or Podman</dd></div><div><dt>Network</dt><dd>Denied by default</dd></div><div><dt>Memory</dt><dd>512 MB default</dd></div><div><dt>CPU</dt><dd>1.0 core default</dd></div><div><dt>Processes</dt><dd>128 maximum</dd></div></dl></article><article class="feature-panel"><header><strong>Validation queue</strong><span>LOCAL</span></header><div id="sandboxQueue" class="feature-empty compact"><strong>No sandbox run is active</strong><p>Approved implementation tasks will appear here before production authorization.</p></div></article></div>
+    </section>
+
+    <section id="environments" class="view developer-page">
+      <div class="feature-heading"><div><p class="eyebrow">ENVIRONMENT BOUNDARIES</p><h2>Environments</h2><p>Move project widgets between vertical swim lanes. Every manual move is an audited override and requires the one-time approval code.</p></div><span class="feature-counter">OVERRIDE REQUIRED</span></div>
+      <div id="environmentSwimlanes" class="environment-swimlanes" aria-live="polite"></div>
+    </section>
+    <section id="analytics" class="view metrics-view" aria-labelledby="metricsTitle">
+      <header class="metrics-header">
+        <div><p class="metrics-kicker">ATLAS OBSERVABILITY · LOCAL-FIRST TELEMETRY</p><h2 id="metricsTitle">Platform Metrics</h2><p>Operational intelligence across agents, models, tasks, security controls, persistence, and tools.</p></div>
+        <div class="metrics-actions"><span id="metricsUpdated">Waiting for first snapshot</span><button id="refreshMetrics" type="button">↻ Refresh metrics</button></div>
+      </header>
+      <div id="metricsBanner" class="metrics-banner"><i></i><strong>Collecting platform state</strong><span>Reading local services and task activity…</span></div>
+      <div class="metrics-kpis" aria-label="Key platform indicators">
+        <article><small>PLATFORM STATE</small><strong id="metricPlatformState">Checking</strong><span id="metricUptime">Uptime —</span></article>
+        <article><small>ACTIVE TASKS</small><strong id="metricActiveTasks">0</strong><span id="metricTaskMix">0 queued · 0 running</span></article>
+        <article><small>TASK SUCCESS</small><strong id="metricSuccessRate">—</strong><span id="metricCompletedTasks">No completed tasks</span></article>
+        <article><small>AVG RESPONSE</small><strong id="metricAvgDuration">—</strong><span>Completed local tasks</span></article>
+        <article><small>AGENT TEAM</small><strong id="analyticsAgents">0</strong><span id="metricAgentMix">System and custom agents</span></article>
+        <article><small>SERVICES READY</small><strong id="analyticsHealth">Checking</strong><span id="metricServiceNote">Local infrastructure</span></article>
+      </div>
+      <div class="metrics-board">
+        <article class="metric-panel task-performance-panel">
+          <header><div><small>AI OPERATIONS</small><h3>Task performance</h3></div><span id="analyticsTasks">0 active</span></header>
+          <div id="metricsTaskChart" class="task-chart" aria-label="Task status distribution"></div>
+          <div id="metricsTaskLegend" class="task-legend"></div>
+        </article>
+        <article class="metric-panel service-health-panel">
+          <header><div><small>INFRASTRUCTURE</small><h3>Service health</h3></div><span>LIVE</span></header>
+          <div id="metricsServices" class="metrics-service-list"><p class="metrics-empty">Checking services…</p></div>
+        </article>
+        <article class="metric-panel model-runtime-panel">
+          <header><div><small>LOCAL INTELLIGENCE</small><h3>Model runtime</h3></div><span id="metricModelReady">CHECKING</span></header>
+          <dl id="metricsModelRuntime"></dl>
+          <div class="runtime-pulse"><i></i><div><strong id="analyticsModel">Local model</strong><small id="metricProvider">Provider —</small></div></div>
+        </article>
+        <article class="metric-panel governance-panel">
+          <header><div><small>CONTROL PLANE</small><h3>Agent governance</h3></div><span id="metricGovernanceState">ENFORCED</span></header>
+          <div id="metricsAgentGovernance" class="governance-grid"></div>
+          <p class="metric-policy">User → Atlas → Forge authorization boundary</p>
+        </article>
+        <article class="metric-panel security-panel">
+          <header><div><small>TRUST & SAFETY</small><h3>Security posture</h3></div><span>LOCAL</span></header>
+          <div id="metricsSecurity" class="control-list"></div>
+        </article>
+        <article class="metric-panel resources-panel">
+          <header><div><small>CAPACITY</small><h3>Runtime & storage</h3></div><span id="metricStorageBackend">FILESYSTEM</span></header>
+          <div id="metricsResources" class="resource-grid"></div>
+        </article>
+        <article class="metric-panel recent-tasks-panel">
+          <header><div><small>WORK QUEUE</small><h3>Recent tasks</h3></div><span id="metricTaskTotal">0 TOTAL</span></header>
+          <div class="metrics-table-wrap"><table><thead><tr><th>Task</th><th>Agent</th><th>Status</th><th>Duration</th><th>Started</th></tr></thead><tbody id="metricsTasksTable"><tr><td colspan="5">No task activity yet.</td></tr></tbody></table></div>
+        </article>
+        <article class="metric-panel tool-coverage-panel">
+          <header><div><small>CAPABILITIES</small><h3>Tool coverage</h3></div><span id="metricToolCount">0 TOOLS</span></header>
+          <div id="metricsTools" class="tool-coverage"></div>
+        </article>
+        <article class="metric-panel change-metrics-panel">
+          <header><div><small>CHANGE MANAGEMENT</small><h3>Forge delivery</h3></div><span id="metricChangeCount">0 CHANGES</span></header>
+          <div id="metricsChanges" class="governance-grid"></div>
+          <div id="metricsRecentChanges" class="metrics-audit-list"><p class="metrics-empty">No change proposals recorded.</p></div>
+        </article>
+        <article class="metric-panel audit-metrics-panel">
+          <header><div><small>ACCOUNTABILITY</small><h3>Recent audit activity</h3></div><span id="metricAuditCount">0 EVENTS</span></header>
+          <div id="metricsAudit" class="metrics-audit-list"><p class="metrics-empty">No recorded events.</p></div>
+        </article>
+      </div>
+    </section>
+    <section id="manual" class="view developer-page user-manual-page">
+      <div class="feature-heading"><div><p class="eyebrow">ATLAS HELP CENTER</p><h2>User Manual</h2><p>Step-by-step guidance for every primary platform feature. Select a topic to open the related page.</p></div><span class="feature-counter" id="manualTopicCount">0 TOPICS</span></div>
+      <div class="manual-search"><label for="manualSearch">Find a feature or task</label><input id="manualSearch" type="search" placeholder="Search agents, approvals, QA, workspace, security..."></div>
+      <div id="manualIndex" class="manual-index" aria-live="polite"></div>
+    </section>
+    <section id="operations" class="view developer-page"><div class="section-head"><div><p class="eyebrow">OBSERVABILITY</p><h2>Platform activity</h2></div></div><div class="grid"><div class="panel"><h3>Service health</h3><div id="health"></div></div><div class="panel"><h3>Audit trail</h3><div id="audit"></div></div></div></section>
+    <section id="settings" class="view developer-page">
+      <div class="section-head"><div><p class="eyebrow">PLATFORM ADMINISTRATION</p><h2>Settings</h2><p>Runtime, environment, identity, and approval controls in one place.</p></div></div>
+      <div class="settings-section-grid">
+        <article class="feature-panel"><header><div><small>RUNTIME</small><h3>Execution environments</h3></div><span>LOCAL</span></header><p>Manage the isolated sandbox and Development, Test, Sandbox, and Production gates.</p><footer><button type="button" data-open-view="sandbox">Sandbox settings</button><button type="button" data-open-view="environments">Environment lifecycle</button></footer></article>
+        <article class="feature-panel"><header><div><small>IDENTITY</small><h3>User profile</h3></div><span>LOCAL DISPLAY</span></header><form id="profileSettingsForm" class="management-form"><label>Display name<input id="profileDisplayName" minlength="2" maxlength="80" value="Jerome H." required></label><label>Role label<input id="profileRole" minlength="2" maxlength="80" value="Platform owner" required></label><p>This updates the local interface only. It does not create an authenticated identity or change authorization.</p><button class="feature-primary" type="submit">Save profile</button></form></article>
+        <article class="feature-panel"><header><div><small>ACCESS</small><h3>User management</h3></div><span>FOUNDATION</span></header><p>Create users and assign roles here when multi-user authentication is enabled. Community mode currently operates as a local owner workspace.</p><button type="button" disabled>Create user (authentication required)</button></article>
+        <article class="feature-panel"><header><div><small>AUTHENTICATION</small><h3>Sign-in providers</h3></div><span>OPTIONAL</span></header><dl class="feature-definition"><div><dt>Local owner</dt><dd>Enabled</dd></div><div><dt>Google OAuth</dt><dd>Disabled by default</dd></div></dl><p>Google OAuth remains an optional integration and does not affect standalone Community mode.</p></article>
+        <article class="feature-panel external-approval-panel"><header><div><small>EGRESS CONTROL</small><h3>Approved internet research</h3></div><span>DENY BY DEFAULT</span></header><form id="externalApprovalForm"><label>Search query<input id="externalSearchQuery" required minlength="2" maxlength="2000" placeholder="Research a specific technical question"></label><label>Purpose<input id="externalSearchPurpose" required minlength="5" maxlength="1000" placeholder="Why Atlas needs external access"></label><label>Allowed domains (optional)<input id="externalSearchDomains" placeholder="docs.python.org, github.com"></label><button class="feature-primary" type="submit">Request approval</button></form><div id="externalApprovalList" class="external-approval-list"></div></article>
+      </div>
+      <div id="config" class="settings-grid"></div>
+    </section>
+  </main>
+
+  <dialog id="agentDialog" class="agent-dialog" aria-labelledby="agentDialogTitle">
+    <form id="agentCreateForm" method="dialog">
+      <header><div><small>AGENT CONTROL PLANE</small><h2 id="agentDialogTitle">Add a named agent</h2></div><button id="closeAgentDialog" type="button" aria-label="Close">×</button></header>
+      <label>Name<input id="newAgentName" name="name" minlength="2" maxlength="60" required placeholder="Example: Meridian"></label>
+      <label>Role<input id="newAgentRole" name="role" minlength="2" maxlength="100" required placeholder="Example: Privacy Engineering"></label>
+      <label>Description<textarea id="newAgentDescription" name="description" minlength="10" maxlength="1000" required placeholder="Define the agent's responsibilities and boundaries."></textarea></label>
+      <fieldset><legend>Allowed skills and tools</legend><div id="newAgentTools" class="agent-tool-picker"></div></fieldset>
+      <div class="agent-policy-row"><label><input id="newAgentReadOnly" type="checkbox" checked> Read-only access</label><label><input id="newAgentAuthorization" type="checkbox" checked> Require my authorization</label></div>
+      <p class="agent-policy-note">Atlas remains protected and read-only. Any agent with implementation tools must receive explicit user authorization for each task.</p>
+      <footer><button id="cancelAgent" type="button">Cancel</button><button type="submit">Create agent</button></footer>
+    </form>
+  </dialog>
+
+  <dialog id="agentEditDialog" class="feature-dialog" aria-labelledby="agentEditTitle"><form id="agentEditForm"><header><div><small>APPROVAL-GATED MANAGEMENT</small><h2 id="agentEditTitle">Edit agent</h2></div><button type="button" data-close-agent-edit aria-label="Close">&times;</button></header><input id="editAgentId" type="hidden"><label>Name<input id="editAgentName" minlength="2" maxlength="60" required></label><label>Role<input id="editAgentRole" minlength="2" maxlength="100" required></label><label>Description<textarea id="editAgentDescription" minlength="10" maxlength="1000" required></textarea></label><fieldset><legend>Assigned skills</legend><div id="editAgentSkills" class="agent-tool-picker"></div></fieldset><fieldset><legend>Allowed tools</legend><div id="editAgentTools" class="agent-tool-picker"></div></fieldset><div class="agent-policy-row"><label><input id="editAgentReadOnly" type="checkbox"> Read-only access</label><label><input id="editAgentAuthorization" type="checkbox"> Require my authorization</label></div><p class="feature-notice">Saving creates a one-time approval challenge. Atlas cannot receive implementation permissions or remove its read-only boundary.</p><footer><button type="button" data-close-agent-edit>Cancel</button><button class="feature-primary" type="submit">Review &amp; save</button></footer></form></dialog>
+
+  <dialog id="environmentOverrideDialog" class="feature-dialog" aria-labelledby="environmentOverrideTitle"><form id="environmentOverrideForm"><header><div><small>USER-INITIATED OVERRIDE</small><h2 id="environmentOverrideTitle">Move project</h2></div><button type="button" data-close-environment-override aria-label="Close">&times;</button></header><input id="environmentOverrideLifecycle" type="hidden"><input id="environmentOverrideTarget" type="hidden"><dl id="environmentOverrideSummary" class="feature-definition"></dl><label>Override reason<textarea id="environmentOverrideReason" minlength="10" maxlength="2000" required placeholder="Explain why this project should bypass the normal lifecycle path."></textarea></label><p class="feature-notice">This does not fabricate test or release evidence. Atlas records the override, prior stage, target environment, reason, approval ID, and user authorization.</p><footer><button type="button" data-close-environment-override>Cancel</button><button class="feature-primary" type="submit">Authorize override</button></footer></form></dialog>
+  <dialog id="forgeRecommendationDialog" class="feature-dialog forge-recommendation-dialog" aria-labelledby="forgeRecommendationTitle"><form id="forgeRecommendationForm"><header><div><small>USER-EDITABLE RECOMMENDATION</small><h2 id="forgeRecommendationTitle">Review Forge recommendation</h2></div><button type="button" data-close-forge-recommendation aria-label="Close">&times;</button></header><input id="forgeRecommendationPlanId" type="hidden"><label>Proposed solution<textarea id="forgeRecommendationText" minlength="10" maxlength="5000" rows="5" required></textarea></label><label>Security and operational impact<textarea id="forgeRecommendationImpact" minlength="5" maxlength="2000" rows="3" required></textarea></label><div class="dialog-row"><label>Test plan<textarea id="forgeRecommendationTests" minlength="5" maxlength="2000" rows="4" required></textarea></label><label>Rollback plan<textarea id="forgeRecommendationRollback" minlength="5" maxlength="2000" rows="4" required></textarea></label></div><label>Likely files, one per line<textarea id="forgeRecommendationFiles" maxlength="10000" rows="4" placeholder="Leave blank when Forge has not yet confirmed a file from read-only evidence."></textarea></label><label>Reason for revision<input id="forgeRecommendationReason" minlength="5" maxlength="1000" value="User refined the requested implementation outcome" required></label><p class="feature-notice">Saving revises the recommendation only. It does not approve implementation or write files. The revised recommendation remains subject to your separate approval.</p><footer><button type="button" data-close-forge-recommendation>Cancel</button><button class="feature-primary" type="submit">Save revised recommendation</button></footer></form></dialog>
+
+  <dialog id="toolDialog" class="feature-dialog" aria-labelledby="toolDialogTitle"><form method="dialog"><header><div><small>REGISTERED CAPABILITY</small><h2 id="toolDialogTitle">Tool details</h2></div><button type="submit" aria-label="Close">&times;</button></header><div id="toolDialogBody"></div><footer><button type="submit">Close</button><button id="requestToolButton" class="feature-primary" type="button">Request capability review</button></footer></form></dialog>
+  <dialog id="sourceDialog" class="feature-dialog" aria-labelledby="sourceDialogTitle"><form method="dialog"><header><div><small>AUTHORITATIVE SOURCE</small><h2 id="sourceDialogTitle">Source details</h2></div><button type="submit" aria-label="Close">&times;</button></header><div id="sourceDialogBody"></div><footer><button type="submit">Close</button><button id="requestSourceChange" class="feature-primary" type="button">Request source change</button></footer></form></dialog>
+  <dialog id="recordDetailDialog" class="feature-dialog record-detail-dialog" aria-labelledby="recordDetailTitle"><form method="dialog"><header><div><small id="recordDetailKind">PLATFORM RECORD</small><h2 id="recordDetailTitle">Record details</h2></div><button type="submit" aria-label="Close">&times;</button></header><div id="recordDetailBody" class="record-detail-body"></div><footer><button type="submit">Close</button><button id="recordDetailAction" class="feature-primary" type="button" hidden>Open record</button></footer></form></dialog>
+  <dialog id="sourceRequestDialog" class="feature-dialog" aria-labelledby="sourceRequestTitle"><form id="sourceRequestForm"><header><div><small>PROVENANCE WORKFLOW</small><h2 id="sourceRequestTitle">Request a source</h2></div><button type="button" data-close-source-request aria-label="Close">&times;</button></header><label>Name<input name="name" minlength="3" maxlength="200" required></label><label>Authority<input name="authority" minlength="2" maxlength="200" required></label><label>Source type<select name="source_type" required><option>Organization policy</option><option>Official government source</option><option>Regulation</option><option>Compliance framework</option><option>Vendor documentation</option><option>Internal documentation</option></select></label><label>Location<input name="location" minlength="3" maxlength="1000" placeholder="Local path or official URL" required></label><div class="dialog-row"><label>Jurisdiction<input name="jurisdiction" maxlength="200"></label><label>Version<input name="version" maxlength="100"></label></div><p class="feature-notice">Submitting a request does not make the source authoritative. Atlas records it for provenance, authority, version, date, and scope review.</p><footer><button type="button" data-close-source-request>Cancel</button><button class="feature-primary" type="submit">Submit for review</button></footer></form></dialog>
+  <dialog id="approvalPasscodeDialog" class="feature-dialog approval-dialog" aria-labelledby="approvalPasscodeTitle"><form id="approvalPasscodeForm"><header><div><small>LOCAL HUMAN APPROVAL</small><h2 id="approvalPasscodeTitle">Authorize protected action</h2></div><button id="cancelPasscodeTop" type="button" aria-label="Close">&times;</button></header><div class="approval-lock" aria-hidden="true">&#128274;</div><p id="approvalActionSummary">Review the exact action before continuing.</p><div id="approvalChallengePanel" class="approval-challenge" hidden><small>ONE-TIME LOCAL CODE</small><strong id="approvalChallengeCode">000000</strong><span>Expires in five minutes</span></div><label>Enter the six-digit code<input id="approvalPasscode" type="password" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code" required placeholder="000000"></label><p class="feature-notice">The random code is hashed in memory, expires after five minutes, locks after five failed attempts, and is never persisted. This confirms deliberate local action; identity and RBAC are still required before network exposure.</p><footer><button id="cancelPasscode" type="button">Cancel</button><button class="feature-primary" type="submit">Approve action</button></footer></form></dialog>
+
+  <dialog id="contextHelpDialog" class="feature-dialog context-help-dialog" aria-labelledby="contextHelpTitle"><form method="dialog"><header><div><small>HOW TO USE THIS FEATURE</small><h2 id="contextHelpTitle">Page guide</h2></div><button type="submit" aria-label="Close">&times;</button></header><div id="contextHelpBody"></div><footer><button type="submit">Close</button><button id="openFullManual" class="feature-primary" type="button">Open full manual</button></footer></form></dialog>
+
+  <div id="toast"></div>
+  <script src="/static/worker-avatar.js"></script>
+  <script src="/static/app.js"></script>
+  <script src="/static/developer-features.js"></script>
+  <script src="/static/user-guide.js"></script>
+  <script src="/static/atlas-widget.js"></script>
+</body>
+</html>

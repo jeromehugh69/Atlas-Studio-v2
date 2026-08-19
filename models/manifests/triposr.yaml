@@ -1,0 +1,10 @@
+id: stabilityai/TripoSR
+provider: triposr-local
+purpose: local-single-image-to-3d
+source: https://github.com/VAST-AI-Research/TripoSR
+weights: https://huggingface.co/stabilityai/TripoSR
+license: MIT
+distribution: downloaded-to-local-cache
+weights_bundled: false
+service: avatar3d
+notes: Runs locally in the optional avatar-local Compose profile; no hosted inference, account, key, or generation credit.

@@ -1,0 +1,263 @@
+name: atlas-studio
+services:
+  app:
+    build: .
+    env_file:
+      - path: .env.example
+        required: true
+      - path: .env
+        required: false
+    ports: ["8080:8080"]
+    environment:
+      ATLAS_STUDIO_STT_URL: http://speech:8091/stt
+      ATLAS_STUDIO_TTS_URL: http://speech:8091/tts
+      ATLAS_STUDIO_WORKER_URL: http://worker:8092
+      ATLAS_STUDIO_WORKER_TOKEN: ${ATLAS_STUDIO_WORKER_TOKEN:-atlas-local-worker}
+    volumes:
+      - atlas_studio_artifacts:/var/lib/atlas-studio/artifacts
+      - ./:/workspace:ro
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+      ollama: { condition: service_healthy }
+      worker: { condition: service_healthy }
+    restart: unless-stopped
+    read_only: true
+    tmpfs: ["/tmp:size=128m,noexec,nosuid"]
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: ["ALL"]
+    networks: [default, worker_control]
+
+  worker:
+    build:
+      context: .
+      dockerfile: services/worker/Dockerfile
+    environment:
+      ATLAS_WORKER_WORKSPACE: /workspace
+      ATLAS_WORKER_PLAN_WORKSPACES: /workspaces
+      ATLAS_WORKER_TOKEN: ${ATLAS_STUDIO_WORKER_TOKEN:-atlas-local-worker}
+      ATLAS_WORKER_SITE_ORIGINS: http://app:8080
+    volumes:
+      - ./:/workspace:ro
+      - atlas_studio_plan_workspaces:/workspaces
+    expose: ["8092"]
+    networks: [worker_control]
+    restart: unless-stopped
+    read_only: true
+    tmpfs: ["/tmp:size=128m,noexec,nosuid"]
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: ["ALL"]
+    pids_limit: ${ATLAS_STUDIO_WORKER_PIDS:-256}
+    mem_limit: ${ATLAS_STUDIO_WORKER_MEMORY:-1g}
+    cpus: ${ATLAS_STUDIO_WORKER_CPUS:-2.0}
+
+  research-worker:
+    build: ./services/research-worker
+    profiles: ["web-search"]
+    environment:
+      ATLAS_RESEARCH_TOKEN: ${ATLAS_STUDIO_RESEARCH_WORKER_TOKEN:-atlas-local-research}
+      ATLAS_RESEARCH_SEARXNG_URL: http://searxng:8080
+    networks: [worker_control, research_egress]
+    expose: ["8093"]
+    restart: unless-stopped
+    read_only: true
+    tmpfs: ["/tmp:size=64m,noexec,nosuid"]
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: ["ALL"]
+    pids_limit: 64
+    mem_limit: 256m
+    cpus: 0.5
+
+  searxng:
+    image: searxng/searxng:latest
+    profiles: ["web-search"]
+    networks: [research_egress]
+    volumes:
+      - ./services/research-worker/searxng-settings.yml:/etc/searxng/settings.yml:ro
+    expose: ["8080"]
+    restart: unless-stopped
+    read_only: true
+    tmpfs: ["/tmp:size=128m,nosuid"]
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: ["ALL"]
+
+  portal:
+    build: .
+    command: ["python", "-m", "atlas_studio.gradio_portal"]
+    environment:
+      ATLAS_STUDIO_API_URL: http://app:8080
+      ATLAS_STUDIO_PORTAL_TARGET_URL: http://localhost:8080/
+      ATLAS_STUDIO_PORTAL_PORT: "8080"
+      ATLAS_STUDIO_PORTAL_TASK_TIMEOUT: "900"
+      ATLAS_STUDIO_SPEECH_URL: http://speech:8091
+    ports: ["8082:8080"]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/')"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    depends_on:
+      app: { condition: service_healthy }
+    restart: unless-stopped
+    read_only: true
+    tmpfs: ["/tmp:size=256m,noexec,nosuid"]
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: ["ALL"]
+
+  postgres:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: atlas_studio
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-atlas-studio}
+      POSTGRES_DB: atlas_studio
+    volumes:
+      - atlas_studio_postgres:/var/lib/postgresql/data
+      - ./database/migrations:/docker-entrypoint-initdb.d:ro
+    healthcheck: { test: ["CMD-SHELL", "pg_isready -U atlas_studio -d atlas_studio"], interval: 5s, timeout: 5s, retries: 20 }
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes", "--maxmemory", "256mb", "--maxmemory-policy", "allkeys-lru"]
+    volumes: ["atlas_studio_redis:/data"]
+    healthcheck: { test: ["CMD", "redis-cli", "ping"], interval: 5s, timeout: 3s, retries: 20 }
+    restart: unless-stopped
+
+  ollama:
+    image: ollama/ollama:latest
+    volumes: ["atlas_studio_models:/root/.ollama"]
+    ports: ["11434:11434"]
+    healthcheck: { test: ["CMD", "ollama", "list"], interval: 10s, timeout: 5s, retries: 30 }
+    restart: unless-stopped
+
+  minio:
+    image: minio/minio:latest
+    profiles: ["integrations"]
+    command: server /data --console-address :9001
+    environment:
+      MINIO_ROOT_USER: ${ATLAS_STUDIO_MINIO_ACCESS_KEY:-atlas-studio}
+      MINIO_ROOT_PASSWORD: ${ATLAS_STUDIO_MINIO_SECRET_KEY:-change-this-local-password}
+    volumes: ["atlas_studio_minio:/data"]
+    ports: ["9000:9000", "9001:9001"]
+    healthcheck: { test: ["CMD", "mc", "ready", "local"], interval: 10s, timeout: 5s, retries: 20 }
+
+  avatar3d:
+    build: ./services/avatar3d
+    profiles: ["avatar-local"]
+    environment:
+      AVATAR_DEVICE: ${ATLAS_STUDIO_AVATAR_DEVICE:-cpu}
+      HF_HOME: /models/huggingface
+      U2NET_HOME: /models/u2net
+    volumes:
+      - atlas_studio_avatar_models:/models
+      - atlas_studio_avatar_jobs:/data/jobs
+    expose: ["8090"]
+    healthcheck: { test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8090/health')"], interval: 20s, timeout: 5s, retries: 20, start_period: 60s }
+    restart: unless-stopped
+
+  headtts:
+    build: ./services/headtts
+    profiles: ["speaking-avatar"]
+    environment:
+      HF_HOME: /models/huggingface
+    volumes:
+      - atlas_studio_speech_models:/models
+    ports: ["8882:8882"]
+    healthcheck: { test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:8882/').then(()=>{}).catch(()=>process.exit(1))"], interval: 20s, timeout: 5s, retries: 20, start_period: 30s }
+    restart: unless-stopped
+
+  speech:
+    build: ./services/speech
+    profiles: ["speaking-avatar"]
+    environment:
+      HF_HOME: /models/huggingface
+      ATLAS_SPEECH_WHISPER_MODEL: ${ATLAS_SPEECH_WHISPER_MODEL:-base.en}
+      ATLAS_SPEECH_KOKORO_VOICE: ${ATLAS_SPEECH_KOKORO_VOICE:-af_bella}
+      ATLAS_SPEECH_KOKORO_SPEED: ${ATLAS_SPEECH_KOKORO_SPEED:-0.94}
+      ATLAS_SPEECH_PIPER_VOICE: ${ATLAS_SPEECH_PIPER_VOICE:-en_US-kristin-medium}
+      ATLAS_SPEECH_TTS_PRIMARY: ${ATLAS_SPEECH_TTS_PRIMARY:-kokoro}
+    volumes:
+      - atlas_studio_speech_models:/models
+    expose: ["8091"]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8091/health')"]
+      interval: 20s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
+    restart: unless-stopped
+
+  echomimic:
+    build: ./services/echomimic-v2
+    profiles: ["avatar-lab"]
+    ports: ["7861:7860"]
+    environment:
+      HF_HOME: /models/huggingface
+      FFMPEG_PATH: /usr/bin
+    volumes:
+      - atlas_studio_echomimic_models:/opt/echomimic_v2/pretrained_weights
+      - atlas_studio_echomimic_outputs:/opt/echomimic_v2/outputs
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    shm_size: "8gb"
+    restart: unless-stopped
+
+  openavatarchat:
+    build:
+      context: ./services/open-avatar-chat
+      args:
+        OPEN_AVATAR_CHAT_REF: ${ATLAS_STUDIO_OPEN_AVATAR_CHAT_REF:-main}
+    profiles: ["live-avatar"]
+    environment:
+      HF_HOME: /models/huggingface
+      MODELSCOPE_CACHE: /models/modelscope
+    entrypoint: ["sh", "/atlas/entrypoint.sh"]
+    volumes:
+      - ./services/open-avatar-chat/entrypoint.sh:/atlas/entrypoint.sh:ro
+      - atlas_studio_open_avatar_models:/opt/open-avatar-chat/models
+      - atlas_studio_open_avatar_state:/opt/open-avatar-chat/.atlas
+      - atlas_studio_open_avatar_outputs:/opt/open-avatar-chat/exp
+      - atlas_studio_liteavatar_weights:/opt/open-avatar-chat/src/handlers/avatar/liteavatar/algo/liteavatar/weights
+      - atlas_studio_liteavatar_assets:/opt/open-avatar-chat/resource/avatar/liteavatar
+    ports: ["8282:8282"]
+    depends_on:
+      ollama: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8282/')"]
+      interval: 30s
+      timeout: 10s
+      retries: 20
+      # First boot downloads and initializes several GB of local ASR, TTS, and
+      # avatar models. Keep that expected bootstrap state distinct from failure.
+      start_period: 3600s
+    shm_size: "2gb"
+    restart: unless-stopped
+
+volumes:
+  atlas_studio_artifacts:
+  atlas_studio_postgres:
+  atlas_studio_redis:
+  atlas_studio_models:
+  atlas_studio_minio:
+  atlas_studio_avatar_models:
+  atlas_studio_avatar_jobs:
+  atlas_studio_speech_models:
+  atlas_studio_echomimic_models:
+  atlas_studio_echomimic_outputs:
+  atlas_studio_open_avatar_models:
+  atlas_studio_open_avatar_state:
+  atlas_studio_open_avatar_outputs:
+  atlas_studio_liteavatar_weights:
+  atlas_studio_liteavatar_assets:
+  atlas_studio_plan_workspaces:
+
+networks:
+  worker_control:
+    internal: true
+  research_egress: {}

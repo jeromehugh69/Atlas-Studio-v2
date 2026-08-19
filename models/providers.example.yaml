@@ -1,0 +1,20 @@
+model_gateway:
+  default_provider: ollama
+  require_external_keys: false
+providers:
+  ollama:
+    enabled: true
+    base_url: http://ollama:11434
+    protocol: ollama
+  llama_cpp:
+    enabled: false
+    base_url: http://llama-cpp:8080
+    protocol: openai-compatible
+  vllm:
+    enabled: false
+    base_url: http://vllm:8000
+    protocol: openai-compatible
+  transformers:
+    enabled: false
+    base_url: http://transformers:8000
+    protocol: openai-compatible

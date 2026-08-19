@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Atlas AI Avatar Development Station</title>
+  <link rel="stylesheet" href="/static/avatar-station.css">
+  <link rel="stylesheet" href="/static/atlas-widget.css">
+</head>
+<body class="atlas-widget-enabled">
+  <header class="top">
+    <span class="brand">ATLAS STUDIO</span>
+    <a class="back" href="http://localhost:8080">Return to Atlas</a>
+  </header>
+  <main class="shell">
+    <section class="head">
+      <div>
+        <p class="eyebrow">LOCAL AVATAR RUNTIME</p>
+        <h1>AI Avatar Development Station</h1>
+        <p>Speak or type to Atlas through OpenAvatarChat while LiteAvatar renders her response locally in real time.</p>
+      </div>
+      <span class="badge">CPU MODE · NO API KEY</span>
+    </section>
+
+    <section class="runtime-grid">
+      <article class="runtime active">
+        <span class="dot"></span>
+        <div><strong>LiteAvatar + OpenAvatarChat</strong><small>Primary interactive runtime · microphone, text, local Ollama, local speech</small></div>
+      </article>
+      <article class="runtime">
+        <div><strong>EchoMimic V2 Laboratory</strong><small>Secondary CUDA production tool at localhost:7861</small></div>
+      </article>
+    </section>
+
+    <div class="notice">
+      <strong>First launch:</strong> model preparation can take several minutes. Open the local runtime once in a new tab, allow microphone access, then reload this page.
+      <a href="http://localhost:8282" target="_blank" rel="noreferrer">Open local runtime ↗</a>
+    </div>
+
+    <section class="workspace">
+      <div class="portal-ring" aria-hidden="true"></div>
+      <iframe class="frame" src="http://localhost:8282" title="Atlas LiteAvatar interactive runtime" allow="microphone; camera; autoplay; clipboard-write"></iframe>
+    </section>
+
+    <section class="instructions">
+      <div><strong>1 · Activate</strong>Allow microphone access in your browser.</div>
+      <div><strong>2 · Converse</strong>Speak naturally or enter text in the OpenAvatarChat controls.</div>
+      <div><strong>3 · Customize</strong>Prepare an approved LiteAvatar identity package before replacing the included sample.</div>
+    </section>
+    <details class="secondary">
+      <summary>Open the EchoMimic V2 CUDA laboratory</summary>
+      <iframe class="frame secondary-frame" src="http://localhost:7861" title="EchoMimic V2 laboratory"></iframe>
+    </details>
+  </main>
+  <script src="/static/atlas-widget.js"></script>
+</body>
+</html>

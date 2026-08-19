@@ -1,0 +1,202 @@
+/* Enhanced Chat Panel - Suggested Prompts & Dynamic Inputs */
+
+/* Suggested Prompts Section */
+.suggested-prompts-section {
+  display: flex;
+  flex-direction: column;
+  border-bottom: 1px solid var(--line);
+  background: rgba(8, 13, 17, .96);
+}
+
+.prompts-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 9px 15px;
+  border-bottom: 1px solid rgba(126, 170, 190, .1);
+  color: #5f7984;
+  font: 700 .54rem/1 ui-monospace, monospace;
+  letter-spacing: .09em;
+}
+
+.prompts-header div {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.prompts-header strong {
+  color: #9cb3bc;
+}
+
+.prompts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 10px;
+  padding: 12px 15px;
+  overflow-x: auto;
+}
+
+.prompt-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid rgba(126, 170, 190, .15);
+  border-radius: 10px;
+  background: rgba(17, 25, 31, .86);
+  transition: all .2s ease;
+}
+
+.prompt-card:hover {
+  border-color: rgba(41, 210, 238, .4);
+  background: rgba(41, 210, 238, .05);
+  box-shadow: 0 4px 16px rgba(41, 210, 238, .1);
+}
+
+.prompt-card.active {
+  border-color: var(--cyan);
+  background: rgba(41, 210, 238, .08);
+  box-shadow: 0 0 20px rgba(41, 210, 238, .15);
+}
+
+.prompt-icon {
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.prompt-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.prompt-content strong {
+  display: block;
+  color: #c9d7dc;
+  font: 700 .58rem/1 ui-monospace, monospace;
+  letter-spacing: .06em;
+  margin-bottom: 3px;
+}
+
+.prompt-content span {
+  display: block;
+  color: #6b8892;
+  font: .52rem/1.3 ui-monospace, monospace;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.prompt-select {
+  flex-shrink: 0;
+  height: 24px;
+  padding: 0 8px;
+  border: 1px solid rgba(41, 210, 238, .3);
+  border-radius: 6px;
+  color: var(--cyan-soft);
+  background: rgba(41, 210, 238, .06);
+  font: 650 .48rem/1 ui-monospace, monospace;
+  transition: all .2s ease;
+}
+
+.prompt-select:hover {
+  background: rgba(41, 210, 238, .12);
+  border-color: var(--cyan);
+}
+
+/* Dynamic Input Fields */
+.dynamic-inputs {
+  padding: 10px 8px;
+  border-top: 1px solid rgba(126, 170, 190, .1);
+  background: rgba(10, 16, 21, .6);
+}
+
+.input-group {
+  display: grid;
+  gap: 8px;
+}
+
+.input-group label {
+  display: grid;
+  gap: 4px;
+  color: #7f98a3;
+  font: 650 .52rem/1 ui-monospace, monospace;
+  letter-spacing: .04em;
+}
+
+.atlas-input {
+  width: 100%;
+  min-height: 30px;
+  padding: 6px 10px;
+  border: 1px solid rgba(95, 135, 150, .2);
+  border-radius: 6px;
+  outline: none;
+  color: #d7e6ea;
+  background: rgba(5, 10, 13, .72);
+  font: .65rem/1.4 Inter, sans-serif;
+  caret-color: var(--cyan);
+  transition: all .2s ease;
+}
+
+.atlas-input::placeholder {
+  color: #526a74;
+}
+
+.atlas-input:focus {
+  border-color: rgba(41, 210, 238, .5);
+  box-shadow: 0 0 0 2px rgba(41, 210, 238, .055), inset 0 0 12px rgba(41, 210, 238, .025);
+}
+
+.atlas-input option {
+  background: #121b22;
+  color: #d7e6ea;
+}
+
+textarea.atlas-input {
+  min-height: 50px;
+  resize: vertical;
+}
+
+/* Feature-specific input styling */
+.input-group[data-feature="workspace"] label::before {
+  content: "📁 ";
+}
+
+.input-group[data-feature="code"] label::before {
+  content: "✏️ ";
+}
+
+.input-group[data-feature="terminal"] label::before {
+  content: "💻 ";
+}
+
+.input-group[data-feature="plan"] label::before {
+  content: "📋 ";
+}
+
+.input-group[data-feature="request"] label::before {
+  content: "📝 ";
+}
+
+.input-group[data-feature="lifecycle"] label::before {
+  content: "🔄 ";
+}
+
+.input-group[data-feature="security"] label::before {
+  content: "🔒 ";
+}
+
+.input-group[data-feature="chat"] label::before {
+  content: "🤖 ";
+}
+
+/* Responsive adjustments */
+@media (max-width: 560px) {
+  .prompts-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .prompt-card {
+    padding: 8px 10px;
+  }
+}

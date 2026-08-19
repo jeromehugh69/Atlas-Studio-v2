@@ -1,0 +1,11 @@
+{
+  "worker": "Atlas",
+  "model": "atlas_worker.glb",
+  "references": {
+    "front_full_body": "references/atlas_front.png",
+    "front_portrait": "references/atlas_portrait.png",
+    "left_portrait": "references/atlas_left.png",
+    "right_portrait": "references/atlas_right.png"
+  },
+  "usage": "Local Atlas Studio worker identity and user-supplied reference set"
+}

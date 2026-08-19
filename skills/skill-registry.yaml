@@ -1,0 +1,333 @@
+# Atlas Studio Skill Registry
+# Defines available skills, their API key requirements, and delegation rules.
+# All skills use ONLY trusted sources (OpenAI, government, official policies, compliance, open-source repos).
+
+skills:
+  atlas-request-intake:
+    name: atlas-request-intake
+    display_name: "Atlas Request Intake"
+    description: "Receive and scope Atlas Studio user requests with minimal friction"
+    tier: 1  # Always loaded (system prompt level)
+    free: true
+    api_keys: []  # No external API keys required
+    local_only: true
+    agents:
+      - atlas
+    delegates_to:
+      - development-lifecycle
+      - manage-atlas-platform
+    description_triggers:
+      - "user request"
+      - "follow-up"
+      - "correction"
+      - "investigation"
+      - "feature request"
+      - "platform change"
+      - "typed instruction"
+      - "spoken instruction"
+
+  development-lifecycle:
+    name: development-lifecycle
+    display_name: "Development Lifecycle"
+    description: "Governed, evidence-based work through every lifecycle gate"
+    tier: 2  # On-demand (loaded when skill activated)
+    free: true
+    api_keys: []  # No external API keys required
+    local_only: true
+    agents:
+      - atlas
+      - forge
+      - quanta
+      - sentinel
+      - verity
+      - release
+    delegates_to:
+      - manage-atlas-platform
+    description_triggers:
+      - "code change"
+      - "implement"
+      - "test"
+      - "deploy"
+      - "review"
+      - "security review"
+      - "lifecycle"
+      - "promotion"
+      - "rollback"
+      - "monitoring"
+
+  manage-atlas-platform:
+    name: manage-atlas-platform
+    display_name: "Atlas Platform Management"
+    description: "Manage Atlas Studio platform records and navigation"
+    tier: 2  # On-demand (loaded when skill activated)
+    free: true
+    api_keys: []  # No external API keys required
+    local_only: true
+    agents:
+      - atlas
+    delegates_to:
+      - development-lifecycle
+    description_triggers:
+      - "profile update"
+      - "agent metadata"
+      - "agent permissions"
+      - "library"
+      - "knowledge source"
+      - "project management"
+      - "plugin"
+      - "skill inspection"
+      - "tool access"
+      - "workspace"
+      - "settings"
+      - "analytics"
+      - "platform administration"
+
+  sage-research:
+    name: sage-research
+    display_name: "Sage Research"
+    description: "Conduct research and development using trusted sources"
+    tier: 2
+    free: true
+    api_keys: []
+    local_only: true
+    agents:
+      - sage
+    delegates_to:
+      - development-lifecycle
+      - manage-atlas-platform
+    description_triggers:
+      - "research"
+      - "investigate"
+      - "compare options"
+      - "best practices"
+      - "find information"
+      - "look into"
+
+  counsel-legal:
+    name: counsel-legal
+    display_name: "Counsel Legal"
+    description: "Provide AI legal advisory using trusted sources"
+    tier: 2
+    free: true
+    api_keys: []
+    local_only: true
+    agents:
+      - counsel
+    delegates_to:
+      - development-lifecycle
+      - manage-atlas-platform
+    description_triggers:
+      - "legal"
+      - "license"
+      - "compliance"
+      - "legal risk"
+      - "is this legal"
+      - "license review"
+
+  scribe-documents:
+    name: scribe-documents
+    display_name: "Scribe Documents"
+    description: "Create and manage documentation using trusted sources"
+    tier: 2
+    free: true
+    api_keys: []
+    local_only: true
+    agents:
+      - scribe
+    delegates_to:
+      - development-lifecycle
+      - manage-atlas-platform
+    description_triggers:
+      - "documentation"
+      - "write docs"
+      - "create guide"
+      - "update docs"
+      - "README"
+      - "document feature"
+
+  pixel-visual:
+    name: pixel-visual
+    display_name: "Pixel Visual"
+    description: "Generate visual assets using trusted sources"
+    tier: 2
+    free: true
+    api_keys: []
+    local_only: true
+    agents:
+      - pixel
+    delegates_to:
+      - development-lifecycle
+      - scribe-documents
+    description_triggers:
+      - "image generation"
+      - "visual"
+      - "logo"
+      - "diagram"
+      - "icon"
+      - "create image"
+
+  blueprint-architecture:
+    name: blueprint-architecture
+    display_name: "Blueprint Architecture"
+    description: "Create architecture blueprints using trusted sources"
+    tier: 2
+    free: true
+    api_keys: []
+    local_only: true
+    agents:
+      - blueprint
+    delegates_to:
+      - development-lifecycle
+      - manage-atlas-platform
+    description_triggers:
+      - "architecture"
+      - "blueprint"
+      - "system design"
+      - "architecture review"
+      - "design architecture"
+
+  nexus-integration:
+    name: nexus-integration
+    display_name: "Nexus Integration"
+    description: "Design and manage API integrations using trusted sources"
+    tier: 2
+    free: true
+    api_keys: []
+    local_only: true
+    agents:
+      - nexus
+    delegates_to:
+      - development-lifecycle
+      - scribe-documents
+    description_triggers:
+      - "API"
+      - "integration"
+      - "REST"
+      - "endpoint"
+      - "API documentation"
+
+  datacore-data:
+    name: datacore-data
+    display_name: "DataCore Data"
+    description: "Manage data engineering using trusted sources"
+    tier: 2
+    free: true
+    api_keys: []
+    local_only: true
+    agents:
+      - datacore
+    delegates_to:
+      - development-lifecycle
+      - manage-atlas-platform
+    description_triggers:
+      - "database"
+      - "data migration"
+      - "SQL"
+      - "data model"
+      - "backup"
+
+  interface-ux:
+    name: interface-ux
+    display_name: "Interface UX"
+    description: "Design user experiences using trusted sources"
+    tier: 2
+    free: true
+    api_keys: []
+    local_only: true
+    agents:
+      - interface
+    delegates_to:
+      - development-lifecycle
+      - scribe-documents
+    description_triggers:
+      - "UI design"
+      - "UX"
+      - "accessibility"
+      - "frontend"
+      - "user interface"
+
+  echo-voice:
+    name: echo-voice
+    display_name: "Echo Voice"
+    description: "Manage voice and audio experiences using trusted sources"
+    tier: 2
+    free: true
+    api_keys: []
+    local_only: true
+    agents:
+      - echo
+    delegates_to:
+      - development-lifecycle
+      - scribe-documents
+    description_triggers:
+      - "voice"
+      - "text to speech"
+      - "speech recognition"
+      - "audio"
+      - "voice assistant"
+
+# Delegation Rules:
+# When a skill receives a request outside its domain, it delegates to the appropriate skill.
+# Delegation is automatic and follows the governance rules in development-lifecycle.
+delegation_rules:
+  - trigger: "user makes a change request"
+    from: atlas-request-intake
+    to: development-lifecycle
+  - trigger: "user wants to manage a platform record"
+    from: atlas-request-intake
+    to: manage-atlas-platform
+  - trigger: "implementation requires platform record change"
+    from: development-lifecycle
+    to: manage-atlas-platform
+  - trigger: "platform change requires governance"
+    from: manage-atlas-platform
+    to: development-lifecycle
+  - trigger: "research findings need implementation"
+    from: sage-research
+    to: development-lifecycle
+  - trigger: "legal review needed for implementation"
+    from: counsel-legal
+    to: development-lifecycle
+  - trigger: "documentation needed for implementation"
+    from: scribe-documents
+    to: development-lifecycle
+  - trigger: "visual assets needed for implementation"
+    from: pixel-visual
+    to: development-lifecycle
+  - trigger: "architecture design needs implementation"
+    from: blueprint-architecture
+    to: development-lifecycle
+  - trigger: "API design needs implementation"
+    from: nexus-integration
+    to: development-lifecycle
+  - trigger: "data model needs implementation"
+    from: datacore-data
+    to: development-lifecycle
+  - trigger: "UX design needs implementation"
+    from: interface-ux
+    to: development-lifecycle
+  - trigger: "voice setup needs implementation"
+    from: echo-voice
+    to: development-lifecycle
+
+# Standard Response Format:
+# Agents generate internal audit reasoning AND a clean user-facing response.
+# The user-facing response is what gets shown to the user.
+# The audit fields are stripped from output and stored separately.
+response_format:
+  audit_fields:
+    - REQUEST       # What was asked
+    - INTERPRETATION # How the agent understood it
+    - EVIDENCE      # Sources, citations, test results
+    - ACTION_TAKEN  # What was done
+    - VERIFICATION  # How the result was confirmed
+    - AUDIT         # Audit trail entry reference
+  optional_audit_fields:
+    - APPROVAL_REQUIRED  # What needs user authorization
+    - NEXT              # Recommended follow-ups
+    - DELEGATION        # If request was delegated to another skill
+  user_facing:
+    description: >
+      After the audit fields, write a clean, direct, natural-language response
+      to the user. This is the only part shown to the user. Do not include
+      field labels in the user-facing section.

@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "runtime": ["rootless-docker", "rootless-podman"],
+  "defaults": {
+    "network": "none",
+    "read_only_root": true,
+    "no_new_privileges": true,
+    "capabilities": [],
+    "memory": "512m",
+    "cpus": 1.0,
+    "pids_limit": 128,
+    "timeout_seconds": 300,
+    "workspace_mount": "explicit-only",
+    "workspace_access": "read-only"
+  },
+  "implementation_agent": {
+    "name": "Forge",
+    "workspace_access": "read-write-with-user-permission"
+  },
+  "atlas": {
+    "production_visibility": "read-only",
+    "workspace_access": "read-only",
+    "implementation_tools": false
+  }
+}
+
