@@ -22,7 +22,7 @@ class Settings(BaseSettings):
     workspace_max_preview_kb: int = Field(512, ge=16, le=4096)
     default_provider: str = "ollama"
     default_model: str = "qwen3:4b"
-    forge_model: str = "qwen3:4b"
+    forge_model: str = "qwen2.5-coder:7b"
     ollama_url: str = "http://localhost:11434"
     model_timeout_seconds: int = Field(120, ge=30, le=900)
     model_max_tokens: int = Field(384, ge=64, le=4096)

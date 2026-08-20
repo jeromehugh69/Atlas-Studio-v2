@@ -107,9 +107,13 @@ function addMessage(role, text, pending = false) {
     header.append(avatar, identity, state);
     article.appendChild(header);
   }
-  const body = document.createElement("p");
+  const body = document.createElement("div");
   body.className = "message-body";
-  body.textContent = text;
+  if (role === "atlas" && window.AtlasFormat) {
+    body.innerHTML = AtlasFormat.render(text);
+  } else {
+    body.textContent = text;
+  }
   article.appendChild(body);
   if (role === "atlas") {
     const tools = document.createElement("footer");
@@ -135,7 +139,13 @@ function addMessage(role, text, pending = false) {
 
 function setPendingMessage(node, text, complete = false) {
   if (complete) node.classList.remove("pending-message");
-  node.querySelector(".message-body").textContent = text;
+  const body = node.querySelector(".message-body");
+  const isAtlas = node.classList.contains("atlas-message");
+  if (isAtlas && window.AtlasFormat) {
+    body.innerHTML = AtlasFormat.render(text);
+  } else {
+    body.textContent = text;
+  }
   const state = node.querySelector(".message-state");
   if (state) state.textContent = complete ? "LOCAL RESPONSE" : "STREAMING";
   transcript.scrollTop = transcript.scrollHeight;
@@ -492,29 +502,6 @@ function waitForTask(taskId, generation, onUpdate) {
   });
 }
 
-const OLLAMA_URL = "http://localhost:11434";
-const OLLAMA_MODEL = "qwen3:4b";
-const ATLAS_SYSTEM_PROMPT = `You are Atlas, a read-only AI assistant that can delegate tasks to specialist agents.
-
-CORE RULES:
-- ANSWER ONLY from information provided in attachments or conversation context.
-- DO NOT fabricate, assume, or hallucinate any facts, file contents, code, or data.
-- If you do not have enough information, say exactly: "I don't have enough information to answer that based on the provided context."
-- Stay focused on the user's specific question. Do not drift to unrelated topics.
-- Be concise and direct. No preamble, no filler.
-- When uncertain, say so explicitly rather than guessing.
-
-READ-ONLY MODE:
-- You CANNOT create, modify, write, execute, or deploy anything.
-- If asked to do so, refuse: "Atlas is in read-only mode. I can analyze and explain, but I cannot create, modify, or execute anything."
-
-DELEGATION:
-- When the user's request requires an action (plan creation, code review, testing, deployment, etc.), respond with:
-  DELEGATE:[agent name]:[brief task description]
-  Example: DELEGATE:Forge:Create an implementation plan for the authentication feature
-- Available agents: Forge (implementation), Sentinel (security review), Verity (compliance review), Sage (research), Scribe (documentation), Counsel (legal), Pixel (visual), Blueprint (architecture), Nexus (integration), DataCore (data), Interface (UX), Echo (voice)
-- After delegation, explain what you delegated and why.`;
-
 function readFilesAsText(files) {
   return Promise.all(
     Array.from(files).map(
@@ -539,59 +526,19 @@ async function requestAtlas(text, generation = sessionGeneration, onUpdate = () 
     renderAttachments();
   }
 
-  const messages = [{ role: "system", content: ATLAS_SYSTEM_PROMPT }];
-  for (const turn of conversationTurns) {
-    messages.push({ role: turn.role === "user" ? "user" : "assistant", content: turn.text });
-  }
-
   let userContent = text;
   if (attachmentContext) userContent += `\n\nLocal attachment context:\n${attachmentContext}`;
-  messages.push({ role: "user", content: userContent });
 
-  const response = await fetch(`${OLLAMA_URL}/api/chat`, {
+  const history = conversationTurns.map(turn => ({ role: turn.role === "user" ? "user" : "assistant", content: turn.text }));
+
+  const response = await fetch("/api/chat", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ model: OLLAMA_MODEL, messages, stream: true }),
+    body: JSON.stringify({ message: userContent, history }),
   });
-  if (!response.ok) throw new Error(`Ollama returned ${response.status}.`);
-
-  let fullText = "";
-  const reader = response.body.getReader();
-  const decoder = new TextDecoder();
-  let buffer = "";
-
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    buffer += decoder.decode(value, { stream: true });
-    const lines = buffer.split("\n");
-    buffer = lines.pop();
-    for (const line of lines) {
-      if (!line.trim()) continue;
-      try {
-        const chunk = JSON.parse(line);
-        if (chunk.message?.content) {
-          fullText += chunk.message.content;
-          onUpdate(fullText);
-        }
-      } catch (_) {}
-    }
-  }
-
-  const delegationMatch = fullText.match(/^DELEGATE:(\w+):(.+?)(?:\n|$)/m);
-  if (delegationMatch) {
-    const agentName = delegationMatch[1];
-    const taskDescription = delegationMatch[2].trim();
-    const explanation = fullText.replace(delegationMatch[0], "").trim();
-    return {
-      id: "delegation",
-      status: "delegation",
-      output: explanation,
-      delegation: { agent: agentName, task: taskDescription },
-    };
-  }
-
-  return { id: "direct", status: "completed", output: fullText };
+  if (!response.ok) throw new Error(`Chat endpoint returned ${response.status}.`);
+  const data = await response.json();
+  return { id: data.task_id || "direct", status: "completed", output: data.response };
 }
 
 function createSentenceSpeaker(generation, onSpokenText) {
@@ -753,7 +700,7 @@ async function runTurn(text, generation = sessionGeneration, resumeAfter = sessi
   });
   activeSpeechStream = sentenceSpeaker;
   let streamedAnswer = "";
-  setAvatarMode("thinking", "THINKING", "Atlas is thinking with Ollama qwen3:4b.");
+  setAvatarMode("thinking", "THINKING", "Atlas is thinking...");
   try {
     const task = await requestAtlas(text.trim(), generation, fullText => {
       if (!fullText) return;
@@ -768,33 +715,27 @@ async function runTurn(text, generation = sessionGeneration, resumeAfter = sessi
       conversationTurns.push({ role: "user", text: text.trim() }, { role: "atlas", text: explanation });
       conversationTurns = conversationTurns.slice(-8);
 
-      const approved = await delegateToAgent(task.delegation, text.trim());
-      if (!approved) {
-        addMessage("system", "Delegation cancelled by user.");
-      } else {
-        addMessage("system", `Delegating to ${task.delegation.agent} through the governed lifecycle...`);
-        setAvatarMode("thinking", "DELEGATING", `${task.delegation.agent} is processing through Sentinel and Verity review.`);
+      addMessage("system", `Atlas recommends delegating to ${task.delegation.agent}. Approving delegation...`);
+      setAvatarMode("thinking", "DELEGATING", `${task.delegation.agent} is processing through the governed lifecycle.`);
 
-        const intakeResponse = await fetch("/api/atlas/intake", {
+      try {
+        const delegateResponse = await fetch("/api/chat/delegate", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ prompt: `${task.delegation.originalPrompt}\n\n[Delegated by Atlas to ${task.delegation.agent}: ${task.delegation.task}]` }),
+          body: JSON.stringify({ agent_name: task.delegation.agent, prompt: task.delegation.task }),
         });
-        if (!intakeResponse.ok) throw new Error((await intakeResponse.json().catch(() => ({}))).detail || "Delegation failed.");
-        const intake = await intakeResponse.json();
-
-        if (intake.mode === "approval") {
-          setPendingMessage(ensurePending(), intake.message, true);
-        } else {
-          activeTaskId = intake.task.id;
-          const result = await waitForTask(intake.task.id, generation, fullText => {
-            if (fullText) setPendingMessage(ensurePending(), fullText, false);
-          });
-          const answer = result.output || `Task ${result.status}.`;
-          setPendingMessage(ensurePending(), answer, true);
-          conversationTurns.push({ role: "atlas", text: answer });
-          conversationTurns = conversationTurns.slice(-8);
-        }
+        if (!delegateResponse.ok) throw new Error((await delegateResponse.json().catch(() => ({}))).detail || "Delegation failed.");
+        const createdTask = await delegateResponse.json();
+        activeTaskId = createdTask.id;
+        const result = await waitForTask(createdTask.id, generation, fullText => {
+          if (fullText) setPendingMessage(ensurePending(), fullText, false);
+        });
+        const answer = result.output || `Task ${result.status}.`;
+        setPendingMessage(ensurePending(), answer, true);
+        conversationTurns.push({ role: "atlas", text: answer });
+        conversationTurns = conversationTurns.slice(-8);
+      } catch (delegateError) {
+        setPendingMessage(ensurePending(), `Delegation failed: ${delegateError.message}`, true);
       }
     } else {
       const answer = task.output || streamedAnswer || `The local task ended with status ${task.status}.`;

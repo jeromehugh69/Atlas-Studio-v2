@@ -84,7 +84,7 @@
     <section class="sidebar-profile" aria-label="Signed-in profile">
       <div class="sidebar-profile-head"><span class="profile-logo">JH</span><div><strong>Jerome H.</strong><small>Platform owner</small></div><button type="button" data-open-view="settings" aria-label="Open profile settings">&#9881;</button></div>
       <p><i></i> Online</p>
-      <footer><button type="button" data-open-view="settings" title="Settings">&#9881;</button><button type="button" data-open-view="security" title="Security">&#9671;</button><button type="button" data-open-view="manual" title="User manual">?</button><button type="button" title="Local dark appearance">&#9790;</button></footer>
+      <footer><button type="button" data-open-view="settings" title="Settings">&#9881;</button><button type="button" data-open-view="security" title="Security">&#9671;</button><button type="button" data-open-view="manual" title="User manual">?</button><button type="button" id="themeToggle" title="Toggle dark/light appearance">&#9790;</button></footer>
     </section>
 
     <div class="local"><i></i><div><strong>Local-first</strong><small id="mode">Community mode</small></div></div>
@@ -135,7 +135,7 @@
           </section>
 
           <section class="rail-panel activity-panel dashboard-widget" data-widget-id="active-tasks">
-            <header><button class="widget-handle" type="button" aria-label="Move Active Tasks card" aria-grabbed="false"><span>ACTIVE TASKS</span><b aria-hidden="true">&#8942;&#8942;</b></button><span class="rail-live">LIVE</span></header>
+            <header><button class="widget-handle" type="button" aria-label="Move Development Tasks card" aria-grabbed="false"><span>DEV TASKS</span><b aria-hidden="true">&#8942;&#8942;</b></button><span class="rail-live">LIVE</span></header>
             <div id="activity" class="activity"><p class="muted">No tasks running. Atlas is ready.</p></div>
           </section>
 
@@ -383,7 +383,7 @@
       <div class="manual-search"><label for="manualSearch">Find a feature or task</label><input id="manualSearch" type="search" placeholder="Search agents, approvals, QA, workspace, security..."></div>
       <div id="manualIndex" class="manual-index" aria-live="polite"></div>
     </section>
-    <section id="operations" class="view developer-page"><div class="section-head"><div><p class="eyebrow">OBSERVABILITY</p><h2>Platform activity</h2></div></div><div class="grid"><div class="panel"><h3>Service health</h3><div id="health"></div></div><div class="panel"><h3>Audit trail</h3><div id="audit"></div></div></div></section>
+    <section id="operations" class="view developer-page"><div class="section-head"><div><p class="eyebrow">OBSERVABILITY</p><h2>Development activity</h2></div></div><div class="grid"><div class="panel"><h3>Service health</h3><div id="health"></div></div><div class="panel"><h3>Audit trail</h3><div id="audit"></div></div></div></section>
     <section id="settings" class="view developer-page">
       <div class="section-head"><div><p class="eyebrow">PLATFORM ADMINISTRATION</p><h2>Settings</h2><p>Runtime, environment, identity, and approval controls in one place.</p></div></div>
       <div class="settings-section-grid">
@@ -424,6 +424,7 @@
   <dialog id="contextHelpDialog" class="feature-dialog context-help-dialog" aria-labelledby="contextHelpTitle"><form method="dialog"><header><div><small>HOW TO USE THIS FEATURE</small><h2 id="contextHelpTitle">Page guide</h2></div><button type="submit" aria-label="Close">&times;</button></header><div id="contextHelpBody"></div><footer><button type="submit">Close</button><button id="openFullManual" class="feature-primary" type="button">Open full manual</button></footer></form></dialog>
 
   <div id="toast"></div>
+  <script src="/static/auth.js"></script>
   <script src="/static/worker-avatar.js"></script>
   <script src="/static/app.js"></script>
   <script src="/static/developer-features.js"></script>

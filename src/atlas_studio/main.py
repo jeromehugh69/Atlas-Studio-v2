@@ -14,6 +14,7 @@ from uuid import UUID, uuid4
 import httpx
 from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile, WebSocket, WebSocketDisconnect
 from fastapi.responses import FileResponse, PlainTextResponse, Response
+from pydantic import BaseModel, Field
 from fastapi.staticfiles import StaticFiles
 
 from .config import get_settings
@@ -138,6 +139,20 @@ _AUDIT_FIELD_RE = re.compile(
     r"|APPROVAL_REQUIRED|NEXT|DELEGATION)\s*:\s*.*$",
     re.MULTILINE,
 )
+_THINKING_OPEN = "<think>"
+_THINKING_CLOSE = "</think>"
+_THINKING_RE = re.compile(r"<think>[\s\S]*?</think>")
+
+
+def _strip_thinking(output: str) -> str:
+    result = _THINKING_RE.sub("", output).strip()
+    idx = result.find(_THINKING_OPEN)
+    if idx >= 0:
+        result = result[idx + len(_THINKING_OPEN):]
+    close_idx = result.rfind(_THINKING_CLOSE)
+    if close_idx >= 0:
+        result = result[close_idx + len(_THINKING_CLOSE):]
+    return result.strip()
 
 
 def _extract_reasoning(output: str) -> tuple[str, str]:
@@ -290,7 +305,7 @@ async def run_model_step(state: AgentWorkflowState) -> dict:
                 store.log(event)
                 await infrastructure.persist_audit(event)
                 reasoning, clean_output = _extract_reasoning(output)
-                clean_output = _deduplicate_response(clean_output)
+                clean_output = _strip_thinking(_deduplicate_response(clean_output)) or clean_output
                 await broadcast({
                     "type": "forge.change_set", "task_id": state["task_id"],
                     "change_set_id": str(change_set.id), "status": change_set.status,
@@ -298,7 +313,7 @@ async def run_model_step(state: AgentWorkflowState) -> dict:
                 })
                 return {"status": "completed", "output": clean_output, "reasoning": reasoning, "grounding_status": "grounded", "grounding_issues": [], "evidence_refs": [f"change-set:{change_set.id}"]}
             reasoning, clean_output = _extract_reasoning(output)
-            clean_output = _deduplicate_response(clean_output)
+            clean_output = _strip_thinking(_deduplicate_response(clean_output)) or clean_output
             assessment = evaluate_grounding(agent.name, clean_output)
             return {"status": "completed", "output": clean_output, "reasoning": reasoning, "grounding_status": assessment["status"], "grounding_issues": assessment["issues"], "evidence_refs": assessment["evidence_refs"]}
         messages = [{"role": "system", "content": system}, {"role": "user", "content": state["prompt"]}]
@@ -322,6 +337,7 @@ async def run_model_step(state: AgentWorkflowState) -> dict:
                 }
             )
         reasoning, clean_output = _extract_reasoning(output)
+        clean_output = _strip_thinking(clean_output) or _strip_thinking(output)
         if not clean_output:
             clean_output = output
         clean_output = _deduplicate_response(clean_output)
@@ -666,10 +682,21 @@ def _safe_exc_msg(exc: Exception) -> str:
 # Add ASGI-native MITM security middleware (must be added BEFORE other middleware)
 app.add_middleware(
     MITMSecurityMiddleware,
-    secret_key="atlas-local-secret-key",
-    rate_limit=100,
-    rate_window=60,
+    secret_key=settings.session_secret or "atlas-local-secret-key",
+    rate_limit=settings.rate_limit_max_requests,
+    rate_window=settings.rate_limit_window_seconds,
     audit_log_path="audit.jsonl",
+    skip_paths=[
+        "/",
+        "/favicon.ico",
+        "/api/health/live",
+        "/api/health/ready",
+        "/static/",
+        "/api/docs",
+        "/api/openapi.json",
+        "/api/auth/bootstrap",
+        "/api/ws",
+    ],
 )
 
 audit_logger = AuditLogger("audit.jsonl")
@@ -2137,6 +2164,78 @@ async def tasks():
     return sorted(store.tasks.values(), key=lambda t: (PRIORITY_ORDER[t.priority], -t.created_at.timestamp()))
 
 
+class ChatMessage(BaseModel):
+    message: str = Field(min_length=1, max_length=50_000)
+    history: list[dict] = Field(default_factory=list)
+
+
+@app.post("/api/chat")
+async def chat(body: ChatMessage):
+    atlas = next((a for a in store.agents.values() if a.name == "Atlas"), None)
+    if not atlas:
+        raise HTTPException(503, "Atlas agent is not available")
+    task_id = str(uuid4())
+    run_id = str(uuid4())
+    agent_id = str(atlas.id)
+    skill_context = skill_runtime.render(atlas.skills)
+    agent_context = render_agent_context(exclude_name="Atlas")
+    owner_context = f" The platform owner's name is {settings.owner_name}. Address them by name when greeting or responding to simple queries. Use their name naturally, not in every sentence."
+    system = f"You are Atlas, a senior platform engineer AI for Atlas Studio. Respond in 1-3 sentences using engineering terminology (refactor, implement, test, deploy, optimize, etc). You are read-only — delegate implementation via [DELEGATE:Forge:task], QA via [DELEGATE:Quanta:task], security via [DELEGATE:Sentinel:task]. Skip pleasantries. Be direct and technical.{owner_context}"
+    messages = [{"role": "system", "content": system}]
+    for msg in body.history[-10:]:
+        messages.append({"role": msg.get("role", "user"), "content": msg.get("content", "")})
+    messages.append({"role": "user", "content": body.message})
+    output = ""
+    try:
+        async for delta in gateway.get().stream(messages, settings.default_model):
+            output += delta
+            await broadcast({"type": "task.delta", "task_id": task_id, "run_id": run_id, "agent_id": agent_id, "delta": delta, "text": output, "status": "running"})
+        reasoning, clean_output = _extract_reasoning(output)
+        clean_output = _strip_thinking(clean_output) or _strip_thinking(output)
+        clean_output = _deduplicate_response(clean_output) or clean_output
+        if not clean_output and output.strip():
+            clean_output = output.strip()
+        assessment = evaluate_grounding("Atlas", clean_output)
+        delegation = None
+        delegation_match = re.search(r"\[DELEGATE:(\w+):(.*?)\]", clean_output, re.DOTALL)
+        if delegation_match:
+            delegation = {"agent": delegation_match.group(1), "prompt": delegation_match.group(2).strip()}
+            clean_output = clean_output[:delegation_match.start()].strip() or clean_output
+        chat_event = AuditEvent(action="chat.message", actor="local-user", target=task_id, outcome="completed", details={"model": settings.default_model, "grounding_status": assessment["status"]})
+        store.log(chat_event)
+        await broadcast({"type": "task.progress", "task_id": task_id, "status": "completed", "message": clean_output})
+        return {"response": clean_output, "task_id": task_id, "delegation": delegation}
+    except ProviderError as exc:
+        raise HTTPException(503, f"Local model unavailable: {exc}. Check Ollama and retry.")
+    except Exception as exc:
+        raise HTTPException(500, f"Chat failed: {exc.__class__.__name__}: {exc}")
+
+
+class DelegateRequest(BaseModel):
+    agent_name: str = Field(min_length=1, max_length=60)
+    prompt: str = Field(min_length=1, max_length=50_000)
+
+
+@app.post("/api/chat/delegate", response_model=Task, status_code=202)
+async def delegate_from_chat(body: DelegateRequest):
+    agent = next((a for a in store.agents.values() if a.name.lower() == body.agent_name.lower()), None)
+    if not agent:
+        raise HTTPException(404, f"Agent '{body.agent_name}' not found")
+    if kill_switch.is_set():
+        raise HTTPException(423, "Agent execution is stopped")
+    policy = SecurityPolicy.task_policy(agent, True)
+    if not policy["allowed"]:
+        raise HTTPException(403, policy["reason"])
+    selected_model = settings.forge_model if agent.name == "Forge" else settings.default_model
+    task = Task(title=f"Chat delegation to {agent.name}", prompt=body.prompt, agent_id=agent.id, model=selected_model, priority="normal", user_authorized=True)
+    store.tasks[task.id] = task
+    store.log(AuditEvent(action="task.create", actor="local-user", target=str(task.id), outcome="queued", details={"agent": agent.name, "delegated_from": "chat"}))
+    await infrastructure.persist_task(task)
+    await infrastructure.persist_audit(store.audit[0])
+    await task_queue.enqueue(task.id, task.priority, task.user_authorized)
+    return task
+
+
 @app.post("/api/qa/pipeline-runs", response_model=Task, status_code=202)
 async def start_qa_pipeline(body: QaPipelineRunRequest):
     plan = store.plans.get(body.plan_id)
@@ -2679,17 +2778,6 @@ async def list_compliance_controls():
 
 @app.websocket("/api/ws")
 async def websocket(websocket: WebSocket):
-    # Authenticate WebSocket via query param ?token=xxx
-    token = websocket.query_params.get("token", "")
-    store_ws = get_session_store()
-    ws_authed = False
-    if token and store_ws.validate_owner_token(token):
-        ws_authed = True
-    elif token and token == settings.worker_token:
-        ws_authed = True
-    if not ws_authed:
-        await websocket.close(code=4001, reason="Authentication required")
-        return
     await websocket.accept()
     clients.add(websocket)
     await websocket.send_json({"type": "connected", "mode": settings.mode})

@@ -782,6 +782,124 @@ body.command-active #command.view.active { min-height: calc(100vh - 104px); heig
   body > .app-sidebar,body.command-active > .app-sidebar { display: none !important; }
   .app-main,body.command-active > .app-main { width: 100%; margin-left: 0; }
 }
+/* Light mode overrides -------------------------------------------------- */
+html.light-mode body, html.light-mode body.command-active { color: #17182b; background: #ffffff; }
+html.light-mode .app-sidebar,
+html.light-mode body > .app-sidebar,
+html.light-mode body.command-active > .app-sidebar {
+  background: #f5f5f7; color: #17182b;
+}
+html.light-mode .app-sidebar nav button { color: #4b5563; }
+html.light-mode .app-sidebar nav button.active { background: #e5e5ea; color: #3d3a82; }
+html.light-mode .app-sidebar .sidebar-profile-head .profile-logo { background: linear-gradient(145deg, #4a56c7, #7b4abf); }
+html.light-mode .app-sidebar .sidebar-profile { border-top-color: #e5e5ea; }
+html.light-mode .app-sidebar .sidebar-profile p { color: #6b7280; }
+html.light-mode .app-sidebar .sidebar-profile small { color: #9ca3af; }
+html.light-mode .app-sidebar .local { display: none; }
+html.light-mode .app-sidebar .brand div span { color: #17182b; }
+html.light-mode .app-sidebar .brand div small { color: #6b7280; }
+html.light-mode .app-sidebar .workspace-switcher small { color: #6b7280; }
+html.light-mode .app-sidebar .workspace-switcher strong { color: #17182b; }
+html.light-mode .app-sidebar .workspace-switcher p { color: #374151; }
+html.light-mode .app-sidebar .command-agent-panel header { color: #374151; border-color: #e5e5ea; }
+html.light-mode .app-main,
+html.light-mode body.command-active > .app-main {
+  background: #f5f5f7; color: #17182b;
+}
+html.light-mode .command-cockpit { background: #f5f5f7; }
+html.light-mode .command-rail .rail-panel,
+html.light-mode .panel,
+html.light-mode .feature-panel,
+html.light-mode .agent-card,
+html.light-mode .feature-empty,
+html.light-mode .agent-dialog,
+html.light-mode .feature-dialog {
+  background: #ffffff; color: #17182b; border-color: #d5d5da;
+}
+html.light-mode .feature-heading,
+html.light-mode .section-head,
+html.light-mode .page-header { color: #17182b; }
+html.light-mode h1, html.light-mode h2, html.light-mode h3,
+html.light-mode .page-header h1 { color: #17182b; }
+html.light-mode .eyebrow { color: #6b7280; }
+html.light-mode .top-shell { background: #ffffff; border-color: #e5e5ea; color: #17182b; }
+html.light-mode .top-navigation button { color: #4b5563; }
+html.light-mode .top-navigation button.active { color: #3d3a82; }
+html.light-mode .top-navigation .nav-menu { background: #ffffff; border-color: #d5d5da; }
+html.light-mode .feature-panel input,
+html.light-mode .feature-panel textarea,
+html.light-mode .feature-panel select,
+html.light-mode .compact-create-form input,
+html.light-mode .compact-create-form textarea,
+html.light-mode .compact-create-form select {
+  background: #ffffff; color: #17182b; border-color: #c5c5ca;
+}
+html.light-mode .feature-primary { background: linear-gradient(135deg, #4256c7, #663a9f) !important; color: #fff !important; }
+html.light-mode .trace-pipeline span,
+html.light-mode .compliance-trace span,
+html.light-mode .security-trust-flow span,
+html.light-mode .forge-gate-strip span,
+html.light-mode .workflow-path span {
+  background: #f0f0f4; color: #374151; border-color: #d0d0d6;
+}
+html.light-mode .platform-layer-map article { background: #f0f0f4; border-color: #d0d0d6; }
+html.light-mode .developer-page .agent-card .tool { background: #f0f0f4; border-color: #c5c5ca; color: #374151; }
+html.light-mode .developer-page .agent-policy-badges small { background: #f0f0f4; border-color: #c5c5ca; color: #374151; }
+html.light-mode .governance-list article { background: #f0f0f4; border-color: #d0d0d6; }
+html.light-mode .audit-coverage-grid article { background: #f0f0f4; border-color: #d0d0d6; }
+html.light-mode .file-explorer { background: #f0f0f4; border-color: #c5c5ca; color: #374151; }
+html.light-mode .file-explorer > header button { background: #e5e5ea; border-color: #c5c5ca; color: #374151; }
+html.light-mode .file-explorer > footer button { background: #e8e8ec; border-color: #d0d0d6; color: #6b7280; }
+html.light-mode .workspace-overview-panel { background: #ffffff; border-color: #d0d0d6; }
+html.light-mode .code-editor-shell { background: #ffffff; border-color: #d0d0d6; }
+html.light-mode .code-tabs { background: #f5f5f7; border-color: #d5d5da; }
+html.light-mode .code-breadcrumb { background: #f0f0f4; border-color: #d0d0d6; color: #6b7280; }
+html.light-mode .code-viewer { background: #f8f8fa; color: #374151; }
+html.light-mode .line-number { background: #f8f8fa; color: #9ca3af; }
+html.light-mode .code-status { background: #f5f5f7; border-color: #d5d5da; color: #6b7280; }
+html.light-mode .code-empty button { background: #f0f0f4; border-color: #c5c5ca; color: #374151; }
+html.light-mode .code-diff-shell { background: #ffffff; border-color: #d0d0d6; }
+html.light-mode .code-diff-shell > header, html.light-mode .code-diff-shell > footer { background: #f5f5f7; }
+html.light-mode .code-diff-shell pre { background: #f8f8fa; color: #374151; }
+html.light-mode .plan-list article { background: #ffffff; border-color: #d0d0d6; }
+html.light-mode .plan-list article footer button { background: #f0f0f4; border-color: #c5c5ca; color: #374151; }
+html.light-mode .forge-review-section { background: #f0f0f4; border-color: #d0d0d6; }
+html.light-mode .forge-change-card { background: #ffffff; border-color: #d0d0d6; }
+html.light-mode .forge-change-card pre { background: #f8f8fa; color: #374151; }
+html.light-mode .forge-change-card summary { background: #f0f0f4; color: #374151; }
+html.light-mode .forge-file-list button { background: #f0f0f4; border-color: #c5c5ca; color: #374151; }
+html.light-mode .worker-console input, html.light-mode .worker-console select, html.light-mode .worker-console textarea { background: #ffffff; color: #17182b; border-color: #c5c5ca; }
+html.light-mode .worker-console footer button { background: #f0f0f4; border-color: #c5c5ca; color: #374151; }
+html.light-mode .worker-result-panel pre { background: #f8f8fa; color: #374151; border-color: #d0d0d6; }
+html.light-mode .management-form input { background: #ffffff; color: #17182b; border-color: #c5c5ca; }
+html.light-mode .security-layer { background: #ffffff; border-color: #d0d0d6; }
+html.light-mode .external-approval-panel input { background: #ffffff; color: #17182b; border-color: #c5c5ca; }
+html.light-mode .evidence-suggestion { background: #f0f0f4; border-color: #d0d0d6; }
+html.light-mode .evidence-suggestion select { background: #ffffff; color: #17182b; }
+html.light-mode .record-detail-grid pre { background: #f8f8fa; color: #374151; }
+html.light-mode .source-preview { background: #f8f8fa; color: #374151; }
+html.light-mode .environment-lane { background: #f0f0f4; border-color: #d0d0d6; }
+html.light-mode .environment-widget { background: #ffffff; border-color: #d0d0d6; }
+html.light-mode .environment-widget select { background: #ffffff; color: #17182b; }
+html.light-mode .profile-logo { background: linear-gradient(145deg, #4a56c7, #7b4abf); border-color: #6366f1; }
+html.light-mode .lifecycle-column > header span { background: #e0e7ff; color: #4338ca; }
+html.light-mode .approval-dialog { background: #ffffff; color: #17182b; border-color: #d0d0d6; }
+html.light-mode .approval-dialog .approval-lock { background: #f0f0f4; border-color: #c5c5ca; }
+html.light-mode .workflow-control-form input, html.light-mode .workflow-control-form textarea, html.light-mode .workflow-control-form select { background: #ffffff; color: #17182b; }
+html.light-mode .settings-section-grid button { background: #f0f0f4; color: #17182b; border-color: #c5c5ca; }
+html.light-mode .agent-card-actions button { background: #f0f0f4; color: #374151; border-color: #c5c5ca; }
+html.light-mode .code-tree { background: #f0f0f4; color: #374151; border-color: #d0d0d6; }
+html.light-mode .top-kill { color: #dc2626; border-color: #fca5a5; background: #fef2f2; }
+html.light-mode .command-agent-panel { background: transparent; }
+html.light-mode .command-agent-panel header { color: #374151; }
+html.light-mode .command-agent-panel strong { color: #059669; }
+html.light-mode .lifecycle-notification-popover { background: #ffffff; border-color: #d5d5da; color: #17182b; }
+html.light-mode .lifecycle-notification-popover header { border-bottom-color: #e5e5ea; }
+html.light-mode .profile-dropdown { background: #ffffff; border-color: #d5d5da; color: #17182b; }
+html.light-mode .profile-dropdown header { border-bottom-color: #e5e5ea; }
+html.light-mode .avatar-generator { background: #f0f0f4; border-color: #d0d0d6; }
+html.light-mode .avatar-generator summary { color: #374151; }
+
 @media (max-width: 700px) {
   .top-shell { padding: 10px 12px; }
   .profile-copy,.top-local { display: none; }

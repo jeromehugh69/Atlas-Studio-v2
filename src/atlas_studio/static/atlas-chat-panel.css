@@ -73,7 +73,48 @@ button { cursor: pointer; }
 .message-meta strong { color: #d9e9ed; font: 760 .61rem/1 ui-monospace, monospace; letter-spacing: .09em; }
 .message-meta time { color: #536a74; font: 600 .49rem/1 ui-monospace, monospace; }
 .message-state { margin-left: auto; padding: 4px 6px; border: 1px solid rgba(141,128,255,.2); border-radius: 5px; color: #9389e7; background: rgba(141,128,255,.06); font: 650 .48rem/1 ui-monospace, monospace; letter-spacing: .06em; }
-.message > p { margin: 0; white-space: pre-wrap; }
+.message > .message-body { margin: 0; }
+.message-body > :first-child { margin-top: 0; }
+.message-body > :last-child { margin-bottom: 0; }
+
+.message-body .chat-heading { margin: 14px 0 6px; color: #e4f0f4; letter-spacing: .02em; }
+.message-body .chat-h1 { font: 700 .82rem/1.3 Inter, sans-serif; border-bottom: 1px solid var(--line); padding-bottom: 5px; }
+.message-body .chat-h2 { font: 700 .76rem/1.3 Inter, sans-serif; }
+.message-body .chat-h3 { font: 700 .72rem/1.3 Inter, sans-serif; color: var(--cyan-soft); }
+.message-body .chat-h4, .message-body .chat-h5, .message-body .chat-h6 { font: 700 .68rem/1.3 Inter, sans-serif; color: #b0cdd6; }
+
+.message-body .chat-para { margin: 4px 0; line-height: 1.55; }
+.message-body .chat-spacer { height: 6px; }
+
+.message-body .chat-list { margin: 6px 0; padding-left: 18px; }
+.message-body .chat-list li { margin: 2px 0; line-height: 1.5; list-style-position: outside; }
+.message-body ul.chat-list li::marker { color: var(--cyan); }
+.message-body ol.chat-list li::marker { color: var(--cyan); font-weight: 700; }
+
+.message-body .chat-code-block { margin: 8px 0; padding: 10px 12px; border: 1px solid rgba(41,210,238,.12); border-radius: 8px; background: rgba(3,8,12,.7); overflow-x: auto; scrollbar-width: thin; scrollbar-color: #29414b transparent; }
+.message-body .chat-code-block code { color: #b4e4ec; font: 620 .68rem/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; white-space: pre; }
+.message-body .chat-inline-code { padding: 1px 5px; border: 1px solid rgba(41,210,238,.15); border-radius: 4px; color: #8ad9e6; background: rgba(41,210,238,.06); font: 600 .66rem/1.3 ui-monospace, monospace; }
+
+.message-body .chat-table-wrap { margin: 8px 0; overflow-x: auto; }
+.message-body .chat-table { width: 100%; border-collapse: collapse; font-size: .66rem; }
+.message-body .chat-table th { padding: 5px 8px; border: 1px solid rgba(41,210,238,.15); background: rgba(41,210,238,.05); color: var(--cyan-soft); font-weight: 700; text-align: left; white-space: nowrap; }
+.message-body .chat-table td { padding: 4px 8px; border: 1px solid var(--line); color: #b9cdd3; }
+.message-body .chat-table tr:nth-child(even) td { background: rgba(255,255,255,.015); }
+
+.message-body .chat-blockquote { margin: 6px 0; padding: 6px 10px; border-left: 2px solid rgba(141,128,255,.4); color: #a3b8c0; background: rgba(141,128,255,.04); font-style: italic; border-radius: 0 6px 6px 0; }
+
+.message-body .chat-divider { border: none; border-top: 1px solid var(--line); margin: 10px 0; }
+
+.message-body .chat-link { color: var(--cyan); text-decoration: none; border-bottom: 1px solid rgba(41,210,238,.3); }
+.message-body .chat-link:hover { border-bottom-color: var(--cyan); }
+
+.message-body strong { color: #e2f0f4; }
+.message-body em { color: #a8c4ce; }
+.message-body del { color: #6b7e85; }
+
+.message-body .chat-code-block + .chat-para,
+.message-body .chat-para + .chat-code-block { margin-top: 4px; }
+.message-body .chat-heading + .chat-para { margin-top: 2px; }
 .atlas-message { border-left-color: rgba(41,210,238,.58); }
 .user-message { margin-left: auto; border-color: rgba(141,128,255,.3); border-bottom-right-radius: 4px; color: #d8d3ff; background: rgba(74,63,138,.16); }
 .user-message .message-avatar { border-color: rgba(141,128,255,.4); color: #bdb5ff; background: rgba(141,128,255,.08); }
@@ -84,9 +125,9 @@ button { cursor: pointer; }
 .response-context summary { padding-top: 7px; color: #698b97; font: 650 .55rem/1.3 ui-monospace, monospace; cursor: pointer; }
 .response-context p { margin: 7px 0 0; color: #708791; font: .57rem/1.45 ui-monospace, monospace; }
 .pending-message { position: relative; border-color: rgba(41,210,238,.28); }
-.pending-message > p::before { content: "●"; margin-right: 7px; color: var(--cyan); animation: statusPulse 1s ease-in-out infinite; }
-.pending-message > p::after { content: ""; display: inline-block; width: 2px; height: 1em; margin-left: 4px; vertical-align: -.12em; background: var(--cyan); box-shadow: 0 0 8px rgba(41,210,238,.7); animation: cursorBlink .75s steps(2,end) infinite; }
-body[data-atlas-state="speaking"] .atlas-message:last-child > p::after { content: ""; display: inline-block; width: 2px; height: 1em; margin-left: 4px; vertical-align: -.12em; background: var(--cyan); box-shadow: 0 0 8px rgba(41,210,238,.7); animation: cursorBlink .75s steps(2,end) infinite; }
+.pending-message > .message-body::before { content: "●"; margin-right: 7px; color: var(--cyan); animation: statusPulse 1s ease-in-out infinite; }
+.pending-message > .message-body::after { content: ""; display: inline-block; width: 2px; height: 1em; margin-left: 4px; vertical-align: -.12em; background: var(--cyan); box-shadow: 0 0 8px rgba(41,210,238,.7); animation: cursorBlink .75s steps(2,end) infinite; }
+body[data-atlas-state="speaking"] .atlas-message:last-child > .message-body::after { content: ""; display: inline-block; width: 2px; height: 1em; margin-left: 4px; vertical-align: -.12em; background: var(--cyan); box-shadow: 0 0 8px rgba(41,210,238,.7); animation: cursorBlink .75s steps(2,end) infinite; }
 .process-indicator { display: none; align-items: center; gap: 6px; flex: 0 0 auto; padding: 6px 15px 9px; color: #678995; font: 650 .54rem/1 ui-monospace, monospace; }
 .process-indicator i { width: 6px; height: 6px; border-radius: 50%; background: var(--cyan); box-shadow: 0 0 9px var(--cyan); animation: statusPulse 1s ease-in-out infinite; }
 .process-indicator b { width: 3px; height: 3px; border-radius: 50%; background: #678995; animation: statusPulse 1s ease-in-out infinite; }

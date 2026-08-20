@@ -67,8 +67,8 @@ class LiteLLMProvider(ModelProvider):
         api_base: str = "http://localhost:11434",
         api_key: str = "",
         model_prefix: str = "ollama",
-        timeout_seconds: int = 120,
-        max_tokens: int = 384,
+        timeout_seconds: int = 300,
+        max_tokens: int = 2048,
         context_tokens: int = 4096,
         num_retries: int = 2,
         cost_tracking: bool = True,
@@ -124,7 +124,7 @@ class LiteLLMProvider(ModelProvider):
         model = model.strip()
         if not model or len(model) > 128:
             raise ValueError(f"Invalid model name length: {len(model)}")
-        if not re.match(r'^[a-zA-Z0-9._/\-]+$', model):
+        if not re.match(r'^[a-zA-Z0-9._/:\-]+$', model):
             raise ValueError(f"Model name contains disallowed characters: {model}")
         # Block external provider prefixes that could route to paid APIs
         blocked_prefixes = ["openai/", "anthropic/", "google/", "azure/", "cohere/", "bedrock/", "huggingface/"]
@@ -173,7 +173,43 @@ class LiteLLMProvider(ModelProvider):
     async def stream(self, messages: list[dict[str, str]], model: str, temperature: float = 0.3) -> AsyncIterator[str]:
         """Stream a response chunk by chunk."""
         full_model = self._get_full_model(model)
-        
+        use_ollama_direct = "qwen3" in model.lower()
+
+        if use_ollama_direct:
+            import httpx
+            ollama_messages = list(messages)
+            try:
+                async with httpx.AsyncClient(timeout=self.timeout_seconds) as client:
+                    async with client.stream("POST", f"{self.api_base}/api/chat", json={
+                        "model": model, "messages": ollama_messages, "stream": True,
+                        "think": True,
+                        "options": {"temperature": temperature, "num_predict": 8192}
+                    }) as resp:
+                        async for line in resp.aiter_lines():
+                            if not line.strip():
+                                continue
+                            try:
+                                import json
+                                chunk = json.loads(line)
+                                content = chunk.get("message", {}).get("content", "")
+                                if content:
+                                    yield content
+                            except Exception:
+                                continue
+                self._consecutive_failures = 0
+                return
+            except Exception as exc:
+                self._consecutive_failures += 1
+                if self.fallback_models:
+                    for fb in self.fallback_models:
+                        try:
+                            async for chunk in self.stream(messages, fb, temperature):
+                                yield chunk
+                            return
+                        except Exception:
+                            continue
+                raise ProviderError(f"Ollama direct call failed: {exc}")
+
         try:
             response = await self.litellm.acompletion(
                 model=full_model,
