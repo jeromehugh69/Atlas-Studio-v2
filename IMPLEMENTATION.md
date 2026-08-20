@@ -437,3 +437,17 @@ A standalone increment is complete only when:
 - documentation and diagrams are updated with the implementation; and
 - model weights or assets are not redistributed without verified permission.
 
+## 9. Recent Progress
+
+### Chat Pipeline (2026-08-20)
+
+**Document:** [`docs/implementation/06-chat-pipeline-progress.md`](docs/implementation/06-chat-pipeline-progress.md)
+
+**Summary:**
+- Fixed Ollama qwen3:4b thinking leak by using `think: true`
+- Updated system prompt to engineering-focused responses
+- Filtered dashboard activity to development events only
+- Created `/api/chat` and `/api/chat/delegate` endpoints
+
+**Status:** Core functionality working, minor issues remaining (Ollama connection timeout)
+
