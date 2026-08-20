@@ -441,6 +441,30 @@ atlasApprovalForm.addEventListener("submit", async event => {
     return;
   }
 
+  if (approval.chatCommit) {
+    if (atlasApprovalPasscode.value !== approval.challenge_code) {
+      atlasApprovalError.textContent = "Incorrect passcode. Try again.";
+      atlasApprovalPasscode.select();
+      return;
+    }
+    try {
+      const response = await fetch("/api/chat/commit/execute", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ approval_id: approval.id, change_set_id: approval.changeSetId, branch: approval.branch, message: approval.message }),
+      });
+      if (!response.ok) throw new Error((await response.json().catch(() => ({}))).detail || "Commit execution failed.");
+      const result = await response.json();
+      closeAtlasApproval();
+      addMessage("atlas", `Committed to **${result.branch}** at \`${result.commit.slice(0, 8)}\`. Change set ${result.change_set_id} is now in git history.`);
+      setAvatarMode("standby", "COMMIT COMPLETE", "Changes committed successfully.");
+    } catch (error) {
+      atlasApprovalError.textContent = error.message || "Commit failed. Check the code and retry.";
+      atlasApprovalPasscode.select();
+    }
+    return;
+  }
+
   try {
     const decision = await fetch(`/api/approvals/${approval.id}/decision`, {
       method: "POST", headers: { "Content-Type": "application/json" },
@@ -514,6 +538,43 @@ function readFilesAsText(files) {
         }),
     ),
   );
+}
+
+async function handleCommitCommand(text) {
+  const match = text.match(/^\/commit\s+(?:--branch\s+(\S+)\s+)?(?:--message\s+"([^"]+)"\s+)?(\S+)/i);
+  if (!match) {
+    addMessage("atlas", "Usage: `/commit <change_set_id> [--branch main] [--message \"commit message\"]`");
+    return;
+  }
+  const branch = match[1] || "main";
+  const message = match[2] || `Atlas commit: ${match[3]}`;
+  const changeSetId = match[3] || match[1];
+
+  addMessage("system", `Initiating commit for change set ${changeSetId}...`);
+  setAvatarMode("thinking", "COMMITTING", "Preparing governed commit with approval...");
+
+  try {
+    const response = await fetch("/api/chat/commit", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ change_set_id: changeSetId, branch, message }),
+    });
+    if (!response.ok) throw new Error((await response.json().catch(() => ({}))).detail || "Failed to initiate commit.");
+
+    const approval = await response.json();
+    showAtlasApproval({
+      id: approval.approval_id,
+      purpose: `Commit change set '${approval.change_set_title}' to ${branch}`,
+      challenge_code: approval.challenge_code,
+      chatCommit: true,
+      changeSetId,
+      branch,
+      message,
+    });
+  } catch (error) {
+    addMessage("atlas", `Commit failed: ${error.message}`);
+    setAvatarMode("error", "COMMIT FAILED", error.message);
+  }
 }
 
 async function requestAtlas(text, generation = sessionGeneration, onUpdate = () => {}) {
@@ -689,6 +750,13 @@ async function runTurn(text, generation = sessionGeneration, resumeAfter = sessi
   if (!text.trim() || turnBusy) return;
   turnBusy = true;
   stopRecorder(true);
+
+  if (text.trim().toLowerCase().startsWith("/commit")) {
+    turnBusy = false;
+    await handleCommitCommand(text.trim());
+    return;
+  }
+
   addMessage("user", text.trim());
   let pending;
   const ensurePending = () => {

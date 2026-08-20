@@ -2236,7 +2236,62 @@ async def delegate_from_chat(body: DelegateRequest):
     return task
 
 
-@app.post("/api/qa/pipeline-runs", response_model=Task, status_code=202)
+class CommitRequest(BaseModel):
+    change_set_id: str = Field(min_length=1)
+    branch: str = Field(default="main", max_length=100)
+    message: str = Field(min_length=1, max_length=500)
+
+
+@app.post("/api/chat/commit")
+async def commit_from_chat(body: CommitRequest):
+    change_set = store.change_sets.get(UUID(body.change_set_id))
+    if not change_set:
+        raise HTTPException(404, "Change set not found")
+    if change_set.status not in {"tests_passed", "applied"}:
+        raise HTTPException(409, f"Change set status '{change_set.status}' is not committable")
+    approval = approval_service.request(ProtectedActionRequest(
+        action="git_commit",
+        purpose=f"Commit change set '{change_set.title}' to {body.branch}",
+        target=str(change_set.id),
+        actor="local-user",
+        payload={"branch": body.branch, "message": body.message},
+    ))
+    event = AuditEvent(action="approval.request", actor="local-user", target=str(approval.id), outcome="pending", details={"protected_action": "git_commit", "target": str(change_set.id)})
+    store.log(event)
+    await infrastructure.persist_external_approval(approval)
+    await infrastructure.persist_audit(event)
+    return {"approval_id": str(approval.id), "challenge_code": issue_approval_challenge(approval.id), "change_set_id": str(change_set.id), "change_set_title": change_set.title}
+
+
+@app.post("/api/chat/commit/execute")
+async def execute_commit(approval_id: UUID, body: CommitRequest):
+    change_set = store.change_sets.get(UUID(body.change_set_id))
+    if not change_set:
+        raise HTTPException(404, "Change set not found")
+    if change_set.status not in {"tests_passed", "applied"}:
+        raise HTTPException(409, f"Change set status '{change_set.status}' is not committable")
+    payload = {"change_set_id": str(change_set.id), "workspace_id": str(change_set.workspace_id), "branch": body.branch, "message": body.message}
+    try:
+        approval = approval_service.consume(approval_id, action="git_commit", target=str(change_set.id), payload=payload)
+        await infrastructure.persist_external_approval(approval)
+        result = await implementation_worker.execute({
+            "action": "git_commit", "workspace_id": str(change_set.workspace_id),
+            "branch": body.branch, "message": body.message,
+            "files": [{"path": item.path, "content": item.content, "expected_sha256": item.after_sha256} for item in change_set.files],
+        })
+    except ApprovalError as exc:
+        raise HTTPException(403, _safe_exc_msg(exc)) from exc
+    except ImplementationWorkerError as exc:
+        raise HTTPException(503, _safe_exc_msg(exc)) from exc
+    change_set.status = "committed"
+    change_set.branch = result.get("branch", body.branch)
+    change_set.commit = result.get("commit", "")
+    change_set.updated_at = datetime.now(timezone.utc)
+    await infrastructure.persist_change_set(change_set)
+    event = AuditEvent(action="forge.change_set.commit", actor="local-user", target=str(change_set.id), outcome="completed", details={"branch": change_set.branch, "commit": change_set.commit})
+    store.log(event)
+    await infrastructure.persist_audit(event)
+    return {"status": "committed", "branch": change_set.branch, "commit": change_set.commit, "change_set_id": str(change_set.id)}
 async def start_qa_pipeline(body: QaPipelineRunRequest):
     plan = store.plans.get(body.plan_id)
     workspace = store.plan_workspaces.get(body.workspace_id)
