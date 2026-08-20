@@ -982,7 +982,7 @@
             ? `<button class="feature-primary" type="button" data-change-commit="${changeSet.id}">Approve branch and commit</button>`
             : "";
       return `<article class="forge-change-card record-selectable" data-status="${escapeHtml(changeSet.status)}" data-record-kind="changeSet" data-record-id="${escapeHtml(changeSet.id)}" role="button" tabindex="0">
-        <header><div><small>${escapeHtml(label(changeSet.status).toUpperCase())}</small><h4>${escapeHtml(changeSet.title)}</h4></div><span>${changeSet.files.length} FILE${changeSet.files.length === 1 ? "" : "S"}</span></header>
+        <header><div><small>${escapeHtml(label(changeSet.status).toUpperCase())}</small><h4>${escapeHtml(changeSet.title)}</h4></div><span>${String(changeSet.id).slice(0, 8).toUpperCase()} · ${changeSet.files.length} FILE${changeSet.files.length === 1 ? "" : "S"}</span></header>
         <p>${escapeHtml(changeSet.summary)}</p>
         <div class="forge-file-list">${fileNames}</div>
         <details open><summary>Review combined diff</summary><pre>${escapeHtml(changeSet.combined_diff || "No textual diff was returned.")}</pre></details>

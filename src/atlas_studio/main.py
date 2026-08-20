@@ -2236,6 +2236,17 @@ async def delegate_from_chat(body: DelegateRequest):
     return task
 
 
+def _resolve_change_set(identifier: str) -> ChangeSet | None:
+    try:
+        return store.change_sets.get(UUID(identifier))
+    except (ValueError, TypeError):
+        pass
+    for cs in store.change_sets.values():
+        if str(cs.id).startswith(identifier):
+            return cs
+    return None
+
+
 class CommitRequest(BaseModel):
     change_set_id: str = Field(min_length=1)
     branch: str = Field(default="main", max_length=100)
@@ -2244,7 +2255,7 @@ class CommitRequest(BaseModel):
 
 @app.post("/api/chat/commit")
 async def commit_from_chat(body: CommitRequest):
-    change_set = store.change_sets.get(UUID(body.change_set_id))
+    change_set = _resolve_change_set(body.change_set_id)
     if not change_set:
         raise HTTPException(404, "Change set not found")
     if change_set.status not in {"tests_passed", "applied"}:
@@ -2265,7 +2276,7 @@ async def commit_from_chat(body: CommitRequest):
 
 @app.post("/api/chat/commit/execute")
 async def execute_commit(approval_id: UUID, body: CommitRequest):
-    change_set = store.change_sets.get(UUID(body.change_set_id))
+    change_set = _resolve_change_set(body.change_set_id)
     if not change_set:
         raise HTTPException(404, "Change set not found")
     if change_set.status not in {"tests_passed", "applied"}:
