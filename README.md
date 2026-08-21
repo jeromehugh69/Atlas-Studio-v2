@@ -21,6 +21,8 @@ For the phased build process, architecture diagrams, workflows, data flows, secu
 - **End-to-End Lifecycle Automation** - Automated progression from user input through development, testing, sandbox, and production deployment.
 - **Multi-Modal Input** - Support for text, speech, files, and screenshots with automatic conversion to structured requests.
 - **Compliance SDK Integration** - SOC 2, ISO 27001, and NIST CSF compliance with audit hash chaining, data classification, and OSCAL documentation.
+- **Terminal Console** - Interactive monospace console for viewing change sets, plans, tasks, and lifecycle stages with real-time WebSocket updates.
+- **Dev Activity Logging** - CLI file changes and development work are captured in the DEV TASKS dashboard panel.
 
 ### Workers by Delos avatar assets
 
@@ -524,6 +526,8 @@ Unified LLM provider interface supporting 100+ providers with built-in cost trac
 | `src/atlas_studio/compliance/` | Compliance SDK and audit |
 | `docs/implementation/` | Implementation plans and code templates |
 | `skills/` | Skill definitions and workflow routing |
+| `src/atlas_studio/static/terminal.css` | Terminal console view styling |
+| `src/atlas_studio/static/terminal.js` | Terminal console view logic |
 | `src/atlas_studio/static/atlas-enhanced-chat.html` | Enhanced chat with suggested prompts |
 | `src/atlas_studio/static/atlas-enhanced-chat.css` | Styling for enhanced chat panel |
 | `src/atlas_studio/static/atlas-enhanced-chat.js` | JavaScript for prompt selection and inputs |

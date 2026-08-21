@@ -177,14 +177,17 @@ class LiteLLMProvider(ModelProvider):
 
         if use_ollama_direct:
             import httpx
+            from httpx import Timeout
             ollama_messages = list(messages)
             try:
-                async with httpx.AsyncClient(timeout=self.timeout_seconds) as client:
+                timeout = Timeout(connect=10.0, read=120.0, write=10.0, pool=10.0)
+                async with httpx.AsyncClient(timeout=timeout) as client:
                     async with client.stream("POST", f"{self.api_base}/api/chat", json={
                         "model": model, "messages": ollama_messages, "stream": True,
-                        "think": True,
-                        "options": {"temperature": temperature, "num_predict": 8192}
+                        "think": False,
+                        "options": {"temperature": temperature, "num_predict": 256}
                     }) as resp:
+                        accumulated_content = ""
                         async for line in resp.aiter_lines():
                             if not line.strip():
                                 continue
@@ -193,6 +196,7 @@ class LiteLLMProvider(ModelProvider):
                                 chunk = json.loads(line)
                                 content = chunk.get("message", {}).get("content", "")
                                 if content:
+                                    accumulated_content += content
                                     yield content
                             except Exception:
                                 continue

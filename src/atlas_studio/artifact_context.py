@@ -7,7 +7,7 @@ import json
 from pathlib import Path
 
 
-MAX_CONTEXT_CHARS = 16_000
+MAX_CONTEXT_CHARS = 64_000
 
 
 def _bounded(text: str, limit: int = MAX_CONTEXT_CHARS) -> str:

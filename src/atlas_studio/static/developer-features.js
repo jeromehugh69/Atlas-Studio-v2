@@ -1203,6 +1203,7 @@
       if (view === "qa" || view === "sandbox" || view === "environments") Promise.all([refreshPlans(), refreshLifecycles(), refreshLifecycleGuide()]).catch(() => {});
       if (view === "lifecycleGuide") Promise.all([refreshPlans(), refreshLifecycles(), refreshLifecycleGuide()]).catch(() => {});
       if (view === "workflows") refreshLifecycleGovernance();
+      if (view === "terminal") window.AtlasTerminal?.refresh();
     },
   };
   initialize();

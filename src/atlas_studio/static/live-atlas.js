@@ -582,7 +582,7 @@ async function requestAtlas(text, generation = sessionGeneration, onUpdate = () 
   if (pendingFiles.length) {
     const files = await readFilesAsText(pendingFiles);
     attachmentContext = files.map(f => `--- ${f.name} ---\n${f.content}`).join("\n\n");
-    if (attachmentContext.length > 32_000) attachmentContext = `${attachmentContext.slice(0, 32_000)}\n\n[Attachment context truncated.]`;
+    if (attachmentContext.length > 64_000) attachmentContext = `${attachmentContext.slice(0, 64_000)}\n\n[Attachment context truncated.]`;
     pendingFiles = [];
     renderAttachments();
   }
@@ -783,8 +783,24 @@ async function runTurn(text, generation = sessionGeneration, resumeAfter = sessi
       conversationTurns.push({ role: "user", text: text.trim() }, { role: "atlas", text: explanation });
       conversationTurns = conversationTurns.slice(-8);
 
-      addMessage("system", `Atlas recommends delegating to ${task.delegation.agent}. Approving delegation...`);
-      setAvatarMode("thinking", "DELEGATING", `${task.delegation.agent} is processing through the governed lifecycle.`);
+      const agentName = task.delegation.agent;
+      const taskBrief = (task.delegation.task || "").slice(0, 120);
+      const card = document.createElement("article");
+      card.className = "message system-message delegation-card";
+      card.innerHTML = `
+        <div class="delegation-card-header">
+          <span class="delegation-card-agent">${agentName.charAt(0)}</span>
+          <strong>${agentName}</strong>
+          <small>DELEGATION</small>
+        </div>
+        <div class="delegation-card-task">Assigned task:</div>
+        <div class="delegation-card-prompt">${taskBrief || "Processing request..."}</div>
+        <div class="delegation-card-status"><span class="pulse"></span> Awaiting response</div>
+      `;
+      document.querySelector(".transcript")?.appendChild(card);
+      card.scrollIntoView({ behavior: "smooth", block: "nearest" });
+
+      setAvatarMode("thinking", "DELEGATING", `${agentName} is processing through the governed lifecycle.`);
 
       try {
         const delegateResponse = await fetch("/api/chat/delegate", {
@@ -795,14 +811,20 @@ async function runTurn(text, generation = sessionGeneration, resumeAfter = sessi
         if (!delegateResponse.ok) throw new Error((await delegateResponse.json().catch(() => ({}))).detail || "Delegation failed.");
         const createdTask = await delegateResponse.json();
         activeTaskId = createdTask.id;
+        const taskIdShort = String(createdTask.id).slice(0, 8).toUpperCase();
+        const statusEl = card.querySelector(".delegation-card-status");
+        if (statusEl) statusEl.innerHTML = `<span class="pulse"></span> Task ${taskIdShort} — running`;
         const result = await waitForTask(createdTask.id, generation, fullText => {
           if (fullText) setPendingMessage(ensurePending(), fullText, false);
         });
+        if (statusEl) statusEl.innerHTML = result.status === "completed" ? `<span style="color:#4ae68a;">&#10003;</span> Task ${taskIdShort} — ${result.status}` : `<span style="color:#e68a4a;">&#9888;</span> Task ${taskIdShort} — ${result.status}`;
         const answer = result.output || `Task ${result.status}.`;
         setPendingMessage(ensurePending(), answer, true);
         conversationTurns.push({ role: "atlas", text: answer });
         conversationTurns = conversationTurns.slice(-8);
       } catch (delegateError) {
+        const statusEl = card.querySelector(".delegation-card-status");
+        if (statusEl) statusEl.innerHTML = `<span style="color:#e65a5a;">&#10007;</span> Failed`;
         setPendingMessage(ensurePending(), `Delegation failed: ${delegateError.message}`, true);
       }
     } else {

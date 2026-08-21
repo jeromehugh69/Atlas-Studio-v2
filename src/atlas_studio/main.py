@@ -656,11 +656,15 @@ from fastapi.middleware.cors import CORSMiddleware
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.cors_origins,
+    allow_origins=settings.cors_origins + ["http://127.0.0.1:3000", "http://localhost:3000"],
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE"],
     allow_headers=["Authorization", "Content-Type", "X-Api-Key"],
 )
+
+# OpenAI-compatible API adapter (/v1/models, /v1/chat/completions)
+from .openai_compat import router as openai_compat_router
+app.include_router(openai_compat_router)
 
 # MITM Security Layer — ASGI-native middleware that works with streaming and WebSockets.
 from .security import MITMSecurityMiddleware, AuditLogger, InputValidator, OutputSanitizer, PolicyEngine
@@ -2165,7 +2169,7 @@ async def tasks():
 
 
 class ChatMessage(BaseModel):
-    message: str = Field(min_length=1, max_length=50_000)
+    message: str = Field(min_length=1, max_length=100_000)
     history: list[dict] = Field(default_factory=list)
 
 
@@ -2303,6 +2307,35 @@ async def execute_commit(approval_id: UUID, body: CommitRequest):
     store.log(event)
     await infrastructure.persist_audit(event)
     return {"status": "committed", "branch": change_set.branch, "commit": change_set.commit, "change_set_id": str(change_set.id)}
+
+
+class DevActivityLog(BaseModel):
+    message: str = Field(min_length=1, max_length=500)
+    status: str = Field(default="completed", max_length=50)
+    task_id: str = Field(default="", max_length=100)
+
+
+@app.post("/api/dev/log")
+async def log_dev_activity(body: DevActivityLog):
+    """Log a development activity event for the dashboard."""
+    event = AuditEvent(
+        action="dev.activity",
+        actor="local-user",
+        target=body.task_id or "cli",
+        outcome=body.status,
+        details={"message": body.message, "source": "cli"},
+    )
+    store.log(event)
+    await infrastructure.persist_audit(event)
+    await broadcast({
+        "type": "task.progress",
+        "task_id": body.task_id or str(uuid4()),
+        "status": body.status,
+        "message": body.message,
+    })
+    return {"status": "logged", "message": body.message}
+
+
 async def start_qa_pipeline(body: QaPipelineRunRequest):
     plan = store.plans.get(body.plan_id)
     workspace = store.plan_workspaces.get(body.workspace_id)
@@ -2858,6 +2891,10 @@ STATIC = __import__("pathlib").Path(__file__).parent / "static"
 if STATIC.is_dir():
     app.mount("/static", StaticFiles(directory=STATIC), name="static")
 app.mount("/artifacts", StaticFiles(directory=settings.artifact_root), name="artifacts")
+
+DOCS_DIR = STATIC.parent.parent / "docs"
+if DOCS_DIR.is_dir():
+    app.mount("/docs", StaticFiles(directory=DOCS_DIR), name="docs")
 
 
 @app.get("/", include_in_schema=False)

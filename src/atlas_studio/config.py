@@ -12,17 +12,18 @@ class Settings(BaseSettings):
     mode: Literal["community", "integrations"] = "community"
     host: str = "127.0.0.1"
     port: int = 8080
-    cors_origins: list[str] = ["http://127.0.0.1:8080", "http://localhost:8080"]
+    cors_origins: list[str] = ["http://127.0.0.1:8080", "http://localhost:8080", "http://127.0.0.1:3000", "http://localhost:3000"]
+    openai_compat_enabled: bool = True
     session_secret: str = ""
-    database_url: str = "postgresql://atlas_studio:atlas-studio@localhost:5432/atlas_studio"
-    redis_url: str = "redis://localhost:6379/0"
+    database_url: str = ""
+    redis_url: str = ""
     artifact_backend: Literal["filesystem", "minio"] = "filesystem"
     artifact_root: Path = Path("./data/artifacts")
     workspace_root: Path = Path(".")
     workspace_max_preview_kb: int = Field(512, ge=16, le=4096)
     default_provider: str = "ollama"
-    default_model: str = "qwen3:4b"
-    forge_model: str = "qwen2.5-coder:7b"
+    default_model: str = "qwen3:1.7b"
+    forge_model: str = "qwen3:1.7b"
     ollama_url: str = "http://localhost:11434"
     model_timeout_seconds: int = Field(120, ge=30, le=900)
     model_max_tokens: int = Field(384, ge=64, le=4096)

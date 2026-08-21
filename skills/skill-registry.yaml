@@ -266,6 +266,29 @@ skills:
       - "audio"
       - "voice assistant"
 
+  file-upload-request:
+    name: file-upload-request
+    display_name: "File Upload Request"
+    description: "Process uploaded files to extract requirements and create development requests"
+    tier: 2
+    free: true
+    api_keys: []
+    local_only: true
+    agents:
+      - atlas
+      - forge
+    delegates_to:
+      - development-lifecycle
+      - manage-atlas-platform
+    description_triggers:
+      - "uploaded file"
+      - "file attachment"
+      - "review file"
+      - "analyze file"
+      - "look at this"
+      - "implement from file"
+      - "create request from"
+
 # Delegation Rules:
 # When a skill receives a request outside its domain, it delegates to the appropriate skill.
 # Delegation is automatic and follows the governance rules in development-lifecycle.
@@ -309,6 +332,12 @@ delegation_rules:
   - trigger: "voice setup needs implementation"
     from: echo-voice
     to: development-lifecycle
+  - trigger: "file contains implementation requirements"
+    from: file-upload-request
+    to: development-lifecycle
+  - trigger: "file contains configuration changes"
+    from: file-upload-request
+    to: manage-atlas-platform
 
 # Standard Response Format:
 # Agents generate internal audit reasoning AND a clean user-facing response.

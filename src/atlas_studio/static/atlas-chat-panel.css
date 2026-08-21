@@ -119,6 +119,15 @@ button { cursor: pointer; }
 .user-message { margin-left: auto; border-color: rgba(141,128,255,.3); border-bottom-right-radius: 4px; color: #d8d3ff; background: rgba(74,63,138,.16); }
 .user-message .message-avatar { border-color: rgba(141,128,255,.4); color: #bdb5ff; background: rgba(141,128,255,.08); }
 .system-message { margin-inline: auto; border-style: dashed; color: #7c929c; background: rgba(10,16,20,.68); font: 620 .62rem/1.4 ui-monospace, monospace; text-align: center; }
+.delegation-card { margin: 4px 0 8px; padding: 9px 11px; border: 1px solid rgba(41,210,238,.25); border-left: 3px solid rgba(41,210,238,.6); border-radius: 8px; background: rgba(41,210,238,.04); }
+.delegation-card-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.delegation-card-agent { display: grid; place-items: center; width: 22px; height: 22px; border: 1px solid rgba(41,210,238,.4); border-radius: 6px; color: var(--cyan-soft); background: rgba(41,210,238,.1); font: 760 .55rem/1 ui-monospace, monospace; }
+.delegation-card-header strong { color: #b9dce6; font: 700 .63rem/1 ui-monospace, monospace; letter-spacing: .06em; }
+.delegation-card-header small { color: #5a7d89; font: 600 .5rem/1 ui-monospace, monospace; }
+.delegation-card-task { color: #8fb8c7; font: 600 .56rem/1.4 ui-monospace, monospace; margin-bottom: 5px; }
+.delegation-card-prompt { color: #6a909c; font: 580 .54rem/1.4 ui-monospace, monospace; padding-left: 8px; border-left: 2px solid rgba(41,210,238,.15); }
+.delegation-card-status { display: inline-flex; align-items: center; gap: 5px; margin-top: 6px; padding: 3px 7px; border: 1px solid rgba(41,210,238,.2); border-radius: 5px; color: #5e8a96; background: rgba(41,210,238,.05); font: 600 .48rem/1 ui-monospace, monospace; }
+.delegation-card-status .pulse { width: 5px; height: 5px; border-radius: 50%; background: var(--cyan); animation: statusPulse 1s ease-in-out infinite; }
 .message-tools { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 9px; }
 .message-tools span { padding: 3px 5px; border: 1px solid rgba(61,115,135,.25); border-radius: 5px; color: #618490; background: rgba(18,61,73,.09); font: 650 .48rem/1 ui-monospace, monospace; }
 .response-context { margin-top: 8px; border-top: 1px solid rgba(126,170,190,.1); }

@@ -439,6 +439,19 @@ A standalone increment is complete only when:
 
 ## 9. Recent Progress
 
+### Terminal Console & Navigation Fixes (2026-08-20)
+
+**Document:** [`docs/changes/003-terminal-view-and-nav-fixes.md`](docs/changes/003-terminal-view-and-nav-fixes.md)
+
+**Summary:**
+- Added interactive terminal console view (Build category) with commands for change sets, plans, tasks, and lifecycles
+- Fixed navigation dropdown hover persistence — menus no longer disappear when moving mouse to items
+- Added page back button with navigation history tracking
+- Added dev activity logging — CLI work now appears in DEV TASKS dashboard panel
+- Added `POST /api/dev/log` endpoint for logging dev activity to audit trail
+
+**Status:** Completed
+
 ### Chat Pipeline (2026-08-20)
 
 **Document:** [`docs/implementation/06-chat-pipeline-progress.md`](docs/implementation/06-chat-pipeline-progress.md)

@@ -2,12 +2,12 @@
 
 ## Overview
 
-Documenting progress on the Atlas Studio conversational chat pipeline, including Ollama qwen3:4b integration, thinking leak fixes, and dashboard activity filtering.
+Documenting progress on the Atlas Studio conversational chat pipeline, including Ollama qwen3:4b integration, thinking leak fixes, dashboard activity filtering, terminal console, and navigation fixes.
 
 ## Current State
 
 **Date:** 2026-08-20
-**Status:** Partially Complete - Core functionality working, minor issues remaining
+**Status:** Core functionality working — terminal console, navigation fixes, and dev activity logging added
 
 ## What Was Completed
 
@@ -82,18 +82,72 @@ You are Atlas, a senior platform engineer AI for Atlas Studio. Respond in 1-3 se
 **Filtered actions:**
 - `task.create`, `task.execute`, `chat.message`
 - `forge.change_set`, `lifecycle.transition`, `grounding.evaluate`
-- `worker.code_execute`, `worker.test_execute`
+- `worker.code_execute`, `worker.test_execute`, `dev.activity`
+
+### 11. Terminal Console View
+**New Build view** providing an interactive console for viewing dev workflow data.
+
+**Features:**
+- Interactive command input with history (up/down arrows, Ctrl+L clear)
+- Commands: `changesets`, `show`, `diff`, `plans`, `plan`, `tasks`, `task`, `lifecycle`, `status`, `refresh`, `help`
+- Monospace terminal styling with dark/light theme support
+- Real-time WebSocket event display
+- ID prefix matching (type first 8 chars of UUID)
+
+**Files:**
+- `static/terminal.css` — Monospace styling, scrollback buffer, status badges
+- `static/terminal.js` — Command parser, data fetchers, renderers
+- `index.html` — Terminal section, sidebar button, Build dropdown entry
+
+**Backend:**
+- `POST /api/dev/log` endpoint for logging CLI dev activity to audit trail
+
+### 12. Navigation Dropdown Fix
+**Problem:** Dropdown menus in top nav disappeared when moving mouse from summary to menu items.
+
+**Root cause:** Gap between `<details>` bottom edge and `.nav-menu` top created a dead zone where `:hover` was lost.
+
+**Fix:** Extended `.nav-category` hover zone with `padding-bottom: 16px; margin-bottom: -16px` and removed `margin-top` gap on `.nav-menu`.
+
+**File:** `developer-features.css:553-570`
+
+### 13. Back Button
+**Added** back navigation button in page header (`index.html:97`).
+
+**Features:**
+- Tracks view navigation history
+- Returns to previous view on click
+- Styled to match existing UI theme
+- `window.viewHistory` array tracks navigation stack
+
+**Files:**
+- `index.html` — Back button in page header
+- `developer-features.css` — Back button styling
+- `app.js` — Navigation history tracking
+
+### 14. Dev Activity Logging
+**Problem:** CLI file changes (via opencode) weren't captured in dashboard dev activity.
+
+**Solution:**
+- Added `POST /api/dev/log` endpoint (`main.py:2308`) that logs to audit trail + broadcasts via WebSocket
+- Added `window.logDevActivity()` function in `app.js` for browser console logging
+- Added `dev.activity` to filtered dev actions in `addEvent()` and `renderAudit()`
+- Terminal initialization auto-logs completed dev tasks
 
 ## Files Modified
 
 | File | Changes |
 |------|---------|
-| `src/atlas_studio/main.py` | Chat endpoints, thinking strip, system prompt |
+| `src/atlas_studio/main.py` | Chat endpoints, thinking strip, system prompt, dev activity endpoint |
 | `src/atlas_studio/providers.py` | Ollama direct call, think:true, token budget |
-| `src/atlas_studio/static/app.js` | Audit filtering, event filtering |
-| `src/atlas_studio/static/index.html` | Dashboard labels |
+| `src/atlas_studio/static/app.js` | Audit filtering, event filtering, nav history, back button, dev activity logger |
+| `src/atlas_studio/static/index.html` | Dashboard labels, terminal section, sidebar/nav buttons, back button |
 | `src/atlas_studio/static/auth.js` | Simplified auth |
 | `src/atlas_studio/static/live-atlas.js` | Chat panel updates |
+| `src/atlas_studio/static/terminal.css` | Terminal view styling (new) |
+| `src/atlas_studio/static/terminal.js` | Terminal view logic (new) |
+| `src/atlas_studio/static/developer-features.css` | Light mode, nav dropdown fix, back button |
+| `src/atlas_studio/static/developer-features.js` | Terminal view activation |
 
 ## Known Issues
 
@@ -107,6 +161,11 @@ You are Atlas, a senior platform engineer AI for Atlas Studio. Respond in 1-3 se
 **Cause:** qwen3 thinking phase consumes tokens from same budget
 **Workaround:** Increase PowerShell timeout to 300s
 **Future Fix:** Separate thinking token budget
+
+### 3. Voice Gender
+**Symptom:** Atlas voice is male, user wants female
+**Cause:** ChatterboxTTS uses default voice without reference audio
+**Fix:** Add female voice reference audio file and configure `audio_prompt_path`
 
 ## Testing
 
@@ -132,19 +191,29 @@ $body = @{ message = "Write me a test case for the chat endpoint" } | ConvertTo-
 
 **Expected:** Response includes `[DELEGATE:Quanta:...]` and delegation JSON
 
+### Dev Activity Log Test
+```powershell
+Invoke-RestMethod -Uri "http://127.0.0.1:8080/api/dev/log" -Method POST -ContentType "application/json" -Body '{"message":"Test activity","status":"completed","task_id":"test-1"}'
+```
+
+**Expected:** `{"status":"logged","message":"Test activity"}`
+
 ## Next Steps
 
-1. **Verify theme toggle** end-to-end with hard refresh
-2. **Test WebSocket chat panel** in browser
-3. **Fix Ollama connection timeout** with auto-reconnect
-4. **Separate thinking token budget** for qwen3
-5. **Add chat history persistence**
-6. **Implement streaming responses** in chat panel
+1. **Investigate female voice** for Atlas (Piper/Kokoro TTS or ChatterboxTTS reference audio)
+2. **Fix Ollama connection timeout** with auto-reconnect
+3. **Separate thinking token budget** for qwen3
+4. **Add chat history persistence**
+5. **Implement streaming responses** in chat panel
+6. **Verify theme toggle** end-to-end with hard refresh
 
 ## Git History
 
 ```
 4677bef Fix qwen3 thinking leak, update chat system prompt, filter dashboard activity
+5fa6354 Add terminal console view, navigation back button, dev activity logging
+256c794 Fix dropdown menu hover persistence
+28a832c Update docs and progress tracking
 ```
 
 Pushed to: https://github.com/jeromehugh69/Atlas-Studio-v2

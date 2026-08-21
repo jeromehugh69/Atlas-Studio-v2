@@ -5,4 +5,7 @@ __pycache__/
 *.py[cod]
 data/
 artifacts/
-touch .gitignore
+server.log
+server_err.log
+src/audit.jsonl
+audit.jsonl

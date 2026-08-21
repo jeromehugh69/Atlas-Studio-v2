@@ -336,10 +336,13 @@ body.command-active #command.view.active { display: block; width: 100%; height: 
 
 .command-rail {
   display: grid;
-  grid-template-rows: minmax(215px, .9fr) minmax(210px, .95fr) minmax(180px, .78fr);
+  grid-template-rows: minmax(200px, .85fr) minmax(180px, .85fr) minmax(160px, .7fr) minmax(160px, .7fr);
   gap: 12px;
   min-width: 0;
   min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #1d3557 transparent;
 }
 
 .rail-panel {
@@ -477,6 +480,16 @@ body.command-active #command.view.active { display: block; width: 100%; height: 
 .task-state.running { color: var(--command-cyan); background: rgba(38, 137, 171, .13); }
 .task-state.completed { color: var(--command-green); background: rgba(35, 137, 92, .13); }
 .task-state.failed, .task-state.cancelled { color: #ff8f82; background: rgba(150, 57, 49, .15); }
+
+.dev-task-card { display: grid; gap: 4px; padding: 8px 9px; margin-bottom: 6px; border: 1px solid #1d3557; border-left: 3px solid rgba(41, 210, 238, .35); border-radius: 6px; background: rgba(8, 17, 31, .5); cursor: pointer; transition: border-color .15s, background .15s; }
+.dev-task-card:hover { border-left-color: var(--command-cyan); background: rgba(8, 17, 31, .75); }
+.dev-task-card.highlight-flash { border-left-color: #4ae68a; background: rgba(35, 137, 92, .1); }
+.dev-task-header { display: flex; align-items: center; gap: 6px; }
+.dev-task-id { color: #5a7d9a; font: 700 7px/1 ui-monospace, monospace; letter-spacing: .05em; }
+.dev-task-agent { color: #8fb8c7; font: 600 7px/1 ui-monospace, monospace; }
+.dev-task-header .task-state { margin-left: auto; }
+.dev-task-title { color: #bed0eb; font: 600 9px/1.2 Inter, sans-serif; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dev-task-prompt { color: #506a84; font: 500 7.5px/1.35 ui-monospace, monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 .status-light {
   width: 7px;
@@ -738,7 +751,7 @@ body.command-active #analytics.view.active {
   body.command-active #analytics.view.active { min-height: calc(100vh - 102px); overflow: visible; }
   .command-cockpit { grid-template-columns: 1fr; min-height: 950px; height: auto; }
   .assistant-workspace { min-height: 700px; }
-  .command-rail { grid-template-columns: repeat(3, 1fr); grid-template-rows: 245px; }
+  .command-rail { grid-template-columns: repeat(3, 1fr); grid-template-rows: 220px; }
   .metrics-board { grid-template-columns: repeat(6, minmax(0, 1fr)); }
   .task-performance-panel, .service-health-panel, .model-runtime-panel,
   .governance-panel, .security-panel, .resources-panel { grid-column: span 3; }
@@ -749,7 +762,7 @@ body.command-active #analytics.view.active {
   body.command-active .command-brand { float: none; }
   body.command-active nav { margin: 8px 0 0; overflow-x: auto; }
   body.command-active nav button { min-width: 82px; }
-  .command-rail { grid-template-columns: 1fr; grid-template-rows: repeat(3, minmax(205px, auto)); }
+  .command-rail { grid-template-columns: 1fr; grid-template-rows: repeat(4, minmax(180px, auto)); }
   .command-cockpit { min-height: 1460px; }
   .workspace-view-grid, .overview-metrics { grid-template-columns: 1fr; }
   .metrics-header { display: block; }

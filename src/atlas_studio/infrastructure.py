@@ -206,7 +206,7 @@ class Infrastructure:
 
     async def connect(self):
         # --- PostgreSQL ---
-        if asyncpg is not None:
+        if asyncpg is not None and self.database_url:
             try:
                 self.db = await asyncpg.create_pool(self.database_url, min_size=1, max_size=5, timeout=5)
                 self._backend = "postgresql"
@@ -238,7 +238,7 @@ class Infrastructure:
                 logger.error("SQLite fallback failed (%s)", exc)
                 self._backend = "memory"
         # --- Redis ---
-        if redis is not None:
+        if redis is not None and self.redis_url:
             try:
                 self.redis = redis.from_url(self.redis_url, decode_responses=True, socket_connect_timeout=3)
                 await self.redis.ping()

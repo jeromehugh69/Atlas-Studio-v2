@@ -12,7 +12,11 @@ description: |
   - "Change the..."
   - "Update the..."
   - "Remove the..."
+  - "Review this file"
+  - "Look at this upload"
+  - "Analyze this document"
   - Any typed or spoken instruction, follow-up, correction, investigation, feature request, or platform change request.
+  - Any request involving an uploaded file attachment.
 ---
 
 # Workflow Routing (SYSTEM PROMPT)
@@ -24,6 +28,7 @@ Route every request to the correct handler based on user intent:
 | Read-only question, explanation, or investigation | This skill (atlas-request-intake) | Acknowledge and proceed with inspection/explanation |
 | Platform change request (code, config, data) | development-lifecycle | Delegate to development-lifecycle skill |
 | Platform record management (profile, settings, agents) | manage-atlas-platform | Delegate to manage-atlas-platform skill |
+| File upload with implementation request | file-upload-request | Delegate to file-upload-request skill |
 | Follow-up on previous request | This skill (atlas-request-intake) | Reuse context and route accordingly |
 | Essential ambiguity (missing target or outcome) | This skill (atlas-request-intake) | Ask one concise question |
 
@@ -111,6 +116,7 @@ When delegating to another skill:
 **Available Delegation Targets:**
 - `development-lifecycle`: For code changes, implementation, testing, deployment
 - `manage-atlas-platform`: For platform record management, settings, configuration
+- `file-upload-request`: For processing uploaded files and creating development requests
 
 ## References
 
