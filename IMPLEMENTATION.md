@@ -439,6 +439,18 @@ A standalone increment is complete only when:
 
 ## 9. Recent Progress
 
+### Chat Streaming, History Persistence, and Provider Resilience (2026-08-21)
+
+**Document:** [`docs/changes/004-chat-streaming-history-and-provider-resilience.md`](docs/changes/004-chat-streaming-history-and-provider-resilience.md)
+
+**Summary:**
+- Ollama auto-reconnect: connection errors retry with exponential backoff (default 3 attempts); LiteLLM `num_retries` now wired into all completion calls
+- Separate thinking token budget for qwen3: `think: true` + `num_predict = max_tokens + thinking_tokens` (defaults 384 + 4096) so reasoning no longer truncates answers
+- Server-side chat history persistence: JSONL per session under `data/chat_history/`, with `GET/DELETE /api/chat/history/{session_id}`
+- Streaming chat panel: new SSE endpoint `POST /api/chat/stream` (start/delta/done/error events); frontend renders deltas live with fallback to blocking `/api/chat`; session id persisted in localStorage
+
+**Status:** Completed
+
 ### Terminal Console & Navigation Fixes (2026-08-20)
 
 **Document:** [`docs/changes/003-terminal-view-and-nav-fixes.md`](docs/changes/003-terminal-view-and-nav-fixes.md)

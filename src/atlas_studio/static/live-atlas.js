@@ -577,6 +577,30 @@ async function handleCommitCommand(text) {
   }
 }
 
+function chatSessionId() {
+  let id = window.localStorage.getItem("atlasChatSession");
+  if (!id) {
+    id = (window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`).replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 64);
+    window.localStorage.setItem("atlasChatSession", id);
+  }
+  return id;
+}
+
+async function restoreChatHistory() {
+  if (conversationTurns.length) return;
+  try {
+    const response = await fetch(`/api/chat/history/${encodeURIComponent(chatSessionId())}`);
+    if (!response.ok) return;
+    const data = await response.json();
+    const recent = (data.messages || []).slice(-8);
+    for (const item of recent) {
+      conversationTurns.push({ role: item.role === "user" ? "user" : "atlas", text: item.content });
+    }
+  } catch (_) {
+    // History is an enhancement; ignore restore failures.
+  }
+}
+
 async function requestAtlas(text, generation = sessionGeneration, onUpdate = () => {}) {
   let attachmentContext = "";
   if (pendingFiles.length) {
@@ -591,15 +615,58 @@ async function requestAtlas(text, generation = sessionGeneration, onUpdate = () 
   if (attachmentContext) userContent += `\n\nLocal attachment context:\n${attachmentContext}`;
 
   const history = conversationTurns.map(turn => ({ role: turn.role === "user" ? "user" : "assistant", content: turn.text }));
+  const sessionId = chatSessionId();
 
-  const response = await fetch("/api/chat", {
+  const response = await fetch("/api/chat/stream", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ message: userContent, history }),
+    body: JSON.stringify({ message: userContent, history, session_id: sessionId }),
   });
-  if (!response.ok) throw new Error(`Chat endpoint returned ${response.status}.`);
-  const data = await response.json();
-  return { id: data.task_id || "direct", status: "completed", output: data.response };
+
+  if (!response.ok || !response.body) {
+    // Fall back to the blocking endpoint if streaming is unavailable.
+    const fallback = await fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: userContent, history, session_id: sessionId }),
+    });
+    if (!fallback.ok) throw new Error(`Chat endpoint returned ${fallback.status}.`);
+    const data = await fallback.json();
+    return { id: data.task_id || "direct", status: "completed", output: data.response };
+  }
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  let result = null;
+  const handleEvent = (part) => {
+    const lines = part.split("\n");
+    const event = (lines.find(line => line.startsWith("event: ")) || "").slice(7).trim();
+    const dataLine = lines.find(line => line.startsWith("data: "));
+    if (!dataLine || !event) return;
+    let payload;
+    try {
+      payload = JSON.parse(dataLine.slice(6));
+    } catch (_) {
+      return;
+    }
+    if (event === "delta") onUpdate(payload.text || "");
+    else if (event === "done") result = payload;
+    else if (event === "error") throw new Error(payload.detail || "Atlas request failed.");
+  };
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    const parts = buffer.split("\n\n");
+    buffer = parts.pop() || "";
+    for (const part of parts) handleEvent(part);
+  }
+  if (buffer.trim()) handleEvent(buffer);
+
+  if (!result) throw new Error("Atlas stream ended without a response.");
+  return { id: result.task_id || "direct", status: "completed", output: result.response };
 }
 
 function createSentenceSpeaker(generation, onSpokenText) {
@@ -947,6 +1014,7 @@ composer.addEventListener("submit", async event => {
 clearButton.addEventListener("click", () => {
   transcript.innerHTML = "";
   conversationTurns = [];
+  fetch(`/api/chat/history/${encodeURIComponent(chatSessionId())}`, { method: "DELETE" }).catch(() => {});
 });
 window.addEventListener("beforeunload", deactivateSession);
 window.addEventListener("message", event => {
@@ -957,6 +1025,7 @@ window.addEventListener("message", event => {
 window.AtlasVoice = { activate: activateSession, deactivate: deactivateSession };
 connectTaskSocket();
 renderAttachments();
+void restoreChatHistory();
 window.setInterval(() => {
   if (taskSocket?.readyState === WebSocket.OPEN) taskSocket.send("ping");
 }, 20000);

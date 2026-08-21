@@ -4,6 +4,7 @@ from contextlib import asynccontextmanager
 from datetime import datetime, timedelta, timezone
 import hmac
 import hashlib
+import json
 import os
 from pathlib import Path
 import re
@@ -13,7 +14,7 @@ from uuid import UUID, uuid4
 
 import httpx
 from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile, WebSocket, WebSocketDisconnect
-from fastapi.responses import FileResponse, PlainTextResponse, Response
+from fastapi.responses import FileResponse, PlainTextResponse, Response, StreamingResponse
 from pydantic import BaseModel, Field
 from fastapi.staticfiles import StaticFiles
 
@@ -53,6 +54,8 @@ gateway = ProviderGateway(settings.default_provider, {"ollama": LiteLLMProvider(
     num_retries=settings.litellm_num_retries,
     cost_tracking=settings.litellm_cost_tracking,
     fallback_models=settings.litellm_fallback_models,
+    connect_retries=settings.model_connect_retries,
+    thinking_tokens=settings.model_thinking_tokens,
 )})
 infrastructure = Infrastructure(settings.database_url, settings.redis_url)
 implementation_worker = ImplementationWorker(settings.worker_url, settings.worker_token)
@@ -2168,9 +2171,81 @@ async def tasks():
     return sorted(store.tasks.values(), key=lambda t: (PRIORITY_ORDER[t.priority], -t.created_at.timestamp()))
 
 
+class ChatHistoryStore:
+    """Durable per-session chat history persisted as JSONL under data/chat_history."""
+
+    def __init__(self, root: Path, max_messages: int = 200):
+        self.root = root
+        self.max_messages = max_messages
+        self.root.mkdir(parents=True, exist_ok=True)
+
+    def _path(self, session_id: str) -> Path:
+        safe = re.sub(r"[^a-zA-Z0-9_-]", "", session_id)[:64]
+        if not safe:
+            raise ValueError("invalid chat session id")
+        return self.root / f"{safe}.jsonl"
+
+    def append(self, session_id: str, role: str, content: str) -> None:
+        entry = {"role": role, "content": content[:20_000], "ts": datetime.now(timezone.utc).isoformat()}
+        with self._path(session_id).open("a", encoding="utf-8") as fh:
+            fh.write(json.dumps(entry) + "\n")
+
+    def read(self, session_id: str) -> list[dict]:
+        try:
+            path = self._path(session_id)
+        except ValueError:
+            return []
+        if not path.exists():
+            return []
+        messages: list[dict] = []
+        for line in path.read_text(encoding="utf-8").splitlines()[-self.max_messages:]:
+            try:
+                item = json.loads(line)
+            except Exception:
+                continue
+            if isinstance(item, dict) and "role" in item and "content" in item:
+                messages.append({"role": item["role"], "content": item["content"], "ts": item.get("ts", "")})
+        return messages
+
+    def clear(self, session_id: str) -> None:
+        try:
+            self._path(session_id).unlink(missing_ok=True)
+        except ValueError:
+            pass
+
+
+chat_history = ChatHistoryStore(settings.chat_history_dir)
+
+
 class ChatMessage(BaseModel):
     message: str = Field(min_length=1, max_length=100_000)
     history: list[dict] = Field(default_factory=list)
+    session_id: str = Field(default="", max_length=64)
+
+
+def _build_chat_messages(message: str, history: list[dict]) -> list[dict]:
+    atlas_context = render_agent_context(exclude_name="Atlas")
+    owner_context = f" The platform owner's name is {settings.owner_name}. Address them by name when greeting or responding to simple queries. Use their name naturally, not in every sentence."
+    system = f"You are Atlas, a senior platform engineer AI for Atlas Studio. Respond in 1-3 sentences using engineering terminology (refactor, implement, test, deploy, optimize, etc). You are read-only — delegate implementation via [DELEGATE:Forge:task], QA via [DELEGATE:Quanta:task], security via [DELEGATE:Sentinel:task]. Skip pleasantries. Be direct and technical.{owner_context}"
+    messages = [{"role": "system", "content": system}]
+    for msg in history[-10:]:
+        messages.append({"role": msg.get("role", "user"), "content": msg.get("content", "")})
+    messages.append({"role": "user", "content": message})
+    return messages
+
+
+def _finalize_chat_output(output: str) -> tuple[str, dict | None]:
+    reasoning, clean_output = _extract_reasoning(output)
+    clean_output = _strip_thinking(clean_output) or _strip_thinking(output)
+    clean_output = _deduplicate_response(clean_output) or clean_output
+    if not clean_output and output.strip():
+        clean_output = output.strip()
+    delegation = None
+    delegation_match = re.search(r"\[DELEGATE:(\w+):(.*?)\]", clean_output, re.DOTALL)
+    if delegation_match:
+        delegation = {"agent": delegation_match.group(1), "prompt": delegation_match.group(2).strip()}
+        clean_output = clean_output[:delegation_match.start()].strip() or clean_output
+    return clean_output, delegation
 
 
 @app.post("/api/chat")
@@ -2181,38 +2256,74 @@ async def chat(body: ChatMessage):
     task_id = str(uuid4())
     run_id = str(uuid4())
     agent_id = str(atlas.id)
+    session_id = body.session_id or uuid4().hex[:12]
     skill_context = skill_runtime.render(atlas.skills)
     agent_context = render_agent_context(exclude_name="Atlas")
-    owner_context = f" The platform owner's name is {settings.owner_name}. Address them by name when greeting or responding to simple queries. Use their name naturally, not in every sentence."
-    system = f"You are Atlas, a senior platform engineer AI for Atlas Studio. Respond in 1-3 sentences using engineering terminology (refactor, implement, test, deploy, optimize, etc). You are read-only — delegate implementation via [DELEGATE:Forge:task], QA via [DELEGATE:Quanta:task], security via [DELEGATE:Sentinel:task]. Skip pleasantries. Be direct and technical.{owner_context}"
-    messages = [{"role": "system", "content": system}]
-    for msg in body.history[-10:]:
-        messages.append({"role": msg.get("role", "user"), "content": msg.get("content", "")})
-    messages.append({"role": "user", "content": body.message})
+    messages = _build_chat_messages(body.message, body.history)
     output = ""
     try:
         async for delta in gateway.get().stream(messages, settings.default_model):
             output += delta
             await broadcast({"type": "task.delta", "task_id": task_id, "run_id": run_id, "agent_id": agent_id, "delta": delta, "text": output, "status": "running"})
-        reasoning, clean_output = _extract_reasoning(output)
-        clean_output = _strip_thinking(clean_output) or _strip_thinking(output)
-        clean_output = _deduplicate_response(clean_output) or clean_output
-        if not clean_output and output.strip():
-            clean_output = output.strip()
+        clean_output, delegation = _finalize_chat_output(output)
         assessment = evaluate_grounding("Atlas", clean_output)
-        delegation = None
-        delegation_match = re.search(r"\[DELEGATE:(\w+):(.*?)\]", clean_output, re.DOTALL)
-        if delegation_match:
-            delegation = {"agent": delegation_match.group(1), "prompt": delegation_match.group(2).strip()}
-            clean_output = clean_output[:delegation_match.start()].strip() or clean_output
         chat_event = AuditEvent(action="chat.message", actor="local-user", target=task_id, outcome="completed", details={"model": settings.default_model, "grounding_status": assessment["status"]})
         store.log(chat_event)
         await broadcast({"type": "task.progress", "task_id": task_id, "status": "completed", "message": clean_output})
-        return {"response": clean_output, "task_id": task_id, "delegation": delegation}
+        chat_history.append(session_id, "user", body.message)
+        chat_history.append(session_id, "assistant", clean_output)
+        return {"response": clean_output, "task_id": task_id, "delegation": delegation, "session_id": session_id}
     except ProviderError as exc:
         raise HTTPException(503, f"Local model unavailable: {exc}. Check Ollama and retry.")
     except Exception as exc:
         raise HTTPException(500, f"Chat failed: {exc.__class__.__name__}: {exc}")
+
+
+@app.post("/api/chat/stream")
+async def chat_stream(body: ChatMessage):
+    """Server-Sent Events variant of /api/chat that streams deltas as they are generated."""
+    atlas = next((a for a in store.agents.values() if a.name == "Atlas"), None)
+    if not atlas:
+        raise HTTPException(503, "Atlas agent is not available")
+    task_id = str(uuid4())
+    run_id = str(uuid4())
+    agent_id = str(atlas.id)
+    session_id = body.session_id or uuid4().hex[:12]
+    messages = _build_chat_messages(body.message, body.history)
+
+    async def event_stream():
+        yield f"event: start\ndata: {json.dumps({'task_id': task_id, 'session_id': session_id})}\n\n"
+        output = ""
+        try:
+            async for delta in gateway.get().stream(messages, settings.default_model):
+                output += delta
+                await broadcast({"type": "task.delta", "task_id": task_id, "run_id": run_id, "agent_id": agent_id, "delta": delta, "text": output, "status": "running"})
+                yield f"event: delta\ndata: {json.dumps({'text': output})}\n\n"
+            clean_output, delegation = _finalize_chat_output(output)
+            assessment = evaluate_grounding("Atlas", clean_output)
+            chat_event = AuditEvent(action="chat.message", actor="local-user", target=task_id, outcome="completed", details={"model": settings.default_model, "grounding_status": assessment["status"], "transport": "sse"})
+            store.log(chat_event)
+            await broadcast({"type": "task.progress", "task_id": task_id, "status": "completed", "message": clean_output})
+            chat_history.append(session_id, "user", body.message)
+            chat_history.append(session_id, "assistant", clean_output)
+            yield f"event: done\ndata: {json.dumps({'response': clean_output, 'task_id': task_id, 'delegation': delegation, 'session_id': session_id})}\n\n"
+        except ProviderError as exc:
+            yield f"event: error\ndata: {json.dumps({'detail': f'Local model unavailable: {exc}. Check Ollama and retry.'})}\n\n"
+        except Exception as exc:
+            yield f"event: error\ndata: {json.dumps({'detail': f'Chat failed: {exc.__class__.__name__}'})}\n\n"
+
+    return StreamingResponse(event_stream(), media_type="text/event-stream", headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
+
+
+@app.get("/api/chat/history/{session_id}")
+async def get_chat_history(session_id: str):
+    return {"session_id": session_id, "messages": chat_history.read(session_id)}
+
+
+@app.delete("/api/chat/history/{session_id}")
+async def delete_chat_history(session_id: str):
+    chat_history.clear(session_id)
+    return {"status": "cleared", "session_id": session_id}
 
 
 class DelegateRequest(BaseModel):

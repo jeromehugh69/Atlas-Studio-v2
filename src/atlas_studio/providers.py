@@ -73,9 +73,11 @@ class LiteLLMProvider(ModelProvider):
         num_retries: int = 2,
         cost_tracking: bool = True,
         fallback_models: list[str] | None = None,
+        connect_retries: int = 3,
+        thinking_tokens: int = 4096,
     ):
         """Initialize LiteLLM provider.
-        
+
         Args:
             api_base: Base URL for the LLM provider
             api_key: API key for the provider (optional for local providers)
@@ -86,6 +88,8 @@ class LiteLLMProvider(ModelProvider):
             num_retries: Number of retries on failure
             cost_tracking: Enable cost tracking
             fallback_models: List of fallback models if primary fails
+            connect_retries: Retries with backoff when the local server refuses/drops connections
+            thinking_tokens: Extra token budget reserved exclusively for reasoning on thinking models
         """
         try:
             import litellm
@@ -102,6 +106,8 @@ class LiteLLMProvider(ModelProvider):
         self.num_retries = num_retries
         self.cost_tracking = cost_tracking
         self.fallback_models = fallback_models or []
+        self.connect_retries = max(0, connect_retries)
+        self.thinking_tokens = max(0, thinking_tokens)
         
         # Configure LiteLLM
         self.litellm.api_base = api_base
@@ -145,8 +151,9 @@ class LiteLLMProvider(ModelProvider):
                 temperature=temperature,
                 max_tokens=self.max_tokens,
                 timeout=self.timeout_seconds,
+                num_retries=self.num_retries,
             )
-            
+
             # Track cost
             if self.cost_tracking and hasattr(response, "usage"):
                 self._track_cost(response.usage, full_model)
@@ -177,42 +184,64 @@ class LiteLLMProvider(ModelProvider):
 
         if use_ollama_direct:
             import httpx
+            import asyncio
             from httpx import Timeout
             ollama_messages = list(messages)
-            try:
-                timeout = Timeout(connect=10.0, read=120.0, write=10.0, pool=10.0)
-                async with httpx.AsyncClient(timeout=timeout) as client:
-                    async with client.stream("POST", f"{self.api_base}/api/chat", json={
-                        "model": model, "messages": ollama_messages, "stream": True,
-                        "think": False,
-                        "options": {"temperature": temperature, "num_predict": 256}
-                    }) as resp:
-                        accumulated_content = ""
-                        async for line in resp.aiter_lines():
-                            if not line.strip():
-                                continue
+            # Thinking models spend reasoning tokens on top of the visible response.
+            # Reserve a separate allocation so answers are not truncated by chain-of-thought.
+            completion_budget = self.max_tokens + self.thinking_tokens
+            payload = {
+                "model": model, "messages": ollama_messages, "stream": True,
+                "think": True,
+                "options": {"temperature": temperature, "num_predict": completion_budget}
+            }
+            timeout = Timeout(connect=10.0, read=120.0, write=10.0, pool=10.0)
+            last_connect_error: Exception | None = None
+            for attempt in range(self.connect_retries + 1):
+                try:
+                    async with httpx.AsyncClient(timeout=timeout) as client:
+                        async with client.stream("POST", f"{self.api_base}/api/chat", json=payload) as resp:
+                            accumulated_content = ""
+                            async for line in resp.aiter_lines():
+                                if not line.strip():
+                                    continue
+                                try:
+                                    import json
+                                    chunk = json.loads(line)
+                                    content = chunk.get("message", {}).get("content", "")
+                                    if content:
+                                        accumulated_content += content
+                                        yield content
+                                except Exception:
+                                    continue
+                    self._consecutive_failures = 0
+                    return
+                except (httpx.ConnectError, httpx.ConnectTimeout, httpx.ReadTimeout) as exc:
+                    # Auto-reconnect: the local server may be starting up or briefly
+                    # unresponsive. Back off and retry before surfacing an error.
+                    last_connect_error = exc
+                    if attempt < self.connect_retries:
+                        delay = min(2 ** attempt, 5)
+                        logger.warning("Ollama connection failed (attempt %d/%d), retrying in %ds: %s",
+                                       attempt + 1, self.connect_retries + 1, delay, exc.__class__.__name__)
+                        await asyncio.sleep(delay)
+                        continue
+                except Exception as exc:
+                    self._consecutive_failures += 1
+                    if self.fallback_models:
+                        for fb in self.fallback_models:
                             try:
-                                import json
-                                chunk = json.loads(line)
-                                content = chunk.get("message", {}).get("content", "")
-                                if content:
-                                    accumulated_content += content
-                                    yield content
+                                async for chunk in self.stream(messages, fb, temperature):
+                                    yield chunk
+                                return
                             except Exception:
                                 continue
-                self._consecutive_failures = 0
-                return
-            except Exception as exc:
-                self._consecutive_failures += 1
-                if self.fallback_models:
-                    for fb in self.fallback_models:
-                        try:
-                            async for chunk in self.stream(messages, fb, temperature):
-                                yield chunk
-                            return
-                        except Exception:
-                            continue
-                raise ProviderError(f"Ollama direct call failed: {exc}")
+                    raise ProviderError(f"Ollama direct call failed: {_sanitize_error(exc)}") from exc
+            self._consecutive_failures += 1
+            raise ProviderError(
+                f"Ollama unreachable after {self.connect_retries + 1} connection attempts: "
+                f"{_sanitize_error(last_connect_error) if last_connect_error else 'unknown error'}"
+            )
 
         try:
             response = await self.litellm.acompletion(
@@ -221,6 +250,7 @@ class LiteLLMProvider(ModelProvider):
                 temperature=temperature,
                 max_tokens=self.max_tokens,
                 timeout=self.timeout_seconds,
+                num_retries=self.num_retries,
                 stream=True,
             )
             
@@ -260,6 +290,7 @@ class LiteLLMProvider(ModelProvider):
                 temperature=temperature,
                 max_tokens=self.max_tokens,
                 timeout=self.timeout_seconds,
+                num_retries=self.num_retries,
             )
             
             message = response.choices[0].message
