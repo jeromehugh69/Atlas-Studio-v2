@@ -439,6 +439,18 @@ A standalone increment is complete only when:
 
 ## 9. Recent Progress
 
+### OpenCode Agent Console Terminal Embed (2026-08-21)
+
+**Document:** [`docs/changes/008-opencode-terminal-embed.md`](docs/changes/008-opencode-terminal-embed.md)
+
+**Summary:**
+- Terminal view embeds the OpenCode coding agent web UI (plan/build modes) rooted at the Atlas Studio codebase
+- Permission-gated via `opencode.json`: every edit and shell command requires owner approval (read-only git status/diff/log pre-approved)
+- `GET /api/opencode/status` + `POST /api/opencode/launch` endpoints; "Start OpenCode" button in the offline strip; legacy console kept as fallback
+- Windows npm `.cmd` shim handled via `shutil.which` + `cmd /c`
+
+**Status:** Completed
+
 ### Chat UI Sizing, Scroll Fix, and Session Memory (2026-08-21)
 
 **Document:** [`docs/changes/007-chat-ui-sizing-scroll-memory.md`](docs/changes/007-chat-ui-sizing-scroll-memory.md)

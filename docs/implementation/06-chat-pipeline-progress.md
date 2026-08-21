@@ -6,8 +6,18 @@ Documenting progress on the Atlas Studio conversational chat pipeline, including
 
 ## Current State
 
-**Date:** 2026-08-20
-**Status:** Core functionality working — terminal console, navigation fixes, and dev activity logging added
+**Date:** 2026-08-21
+**Status:** Core functionality working — streaming chat with 40-message session memory, female voice, status report cards, industry-standard chat sizing, and the OpenCode agent console embedded in the Terminal view
+
+## Recent Updates (2026-08-21)
+
+- **Change 004** — SSE streaming, JSONL history persistence, Ollama auto-reconnect, separate thinking budget
+- **Change 005** — Atlas female voice (ChatterboxTTS voice cloning, owner-recorded reference)
+- **Change 006** — Status reports render as structured cards in the chat feed
+- **Change 007** — Chat UI resized to industry standards (14px messages, resizable/maximizable panel), dashboard scrolls as one page with docked sticky chat, restored history renders on reload, "New session" button resets feed + storage + session id
+- **Change 008** — OpenCode agent console embedded in Terminal view with permission gating (`opencode.json`: edit/bash ask)
+
+See [`docs/changes/`](../changes/) for details.
 
 ## What Was Completed
 

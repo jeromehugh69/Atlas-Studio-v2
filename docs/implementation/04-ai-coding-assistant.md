@@ -1,5 +1,14 @@
 # AI Coding Assistant - Frontend UI Integration
 
+## Update 2026-08-21 - OpenCode Agent Console (Shipped)
+
+The Terminal view now embeds the OpenCode coding agent as the development
+console: plan/build modes, codebase access rooted at the repo, and owner
+permission gating via `opencode.json` (`edit: ask`, `bash: ask`). See
+[`docs/changes/008-opencode-terminal-embed.md`](../changes/008-opencode-terminal-embed.md)
+and [`06-chat-pipeline-progress.md`](06-chat-pipeline-progress.md) for the
+chat-assistant side (streaming, memory, voice).
+
 ## Overview
 
 Add Cursor-like AI coding assistant capabilities to the Atlas Studio Frontend UI. The AI assistant will be able to:

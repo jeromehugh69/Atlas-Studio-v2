@@ -746,3 +746,52 @@
     };
   }
 })();
+
+// OpenCode agent console embed
+(function () {
+  const embed = document.getElementById("opencodeEmbed");
+  const frame = document.getElementById("opencodeFrame");
+  const offline = document.getElementById("opencodeOffline");
+  const startButton = document.getElementById("opencodeStart");
+  if (!embed || !frame || !offline) return;
+
+  function showOnline(url) {
+    if (frame.src !== url) frame.src = url;
+    embed.hidden = false;
+    offline.hidden = true;
+  }
+
+  function showOffline() {
+    embed.hidden = true;
+    offline.hidden = false;
+  }
+
+  async function probe() {
+    try {
+      const response = await fetch("/api/opencode/status");
+      const data = await response.json();
+      if (data.online) showOnline(data.url);
+      else showOffline();
+    } catch (_) {
+      showOffline();
+    }
+  }
+
+  startButton?.addEventListener("click", async () => {
+    startButton.disabled = true;
+    startButton.textContent = "Starting...";
+    try {
+      const response = await fetch("/api/opencode/launch", { method: "POST" });
+      const data = await response.json();
+      if (data.url) showOnline(data.url);
+      else showOffline();
+    } catch (_) {
+      showOffline();
+    } finally {
+      startButton.disabled = false;
+      startButton.textContent = "Start OpenCode";
+    }
+  });
+
+  void probe();
+})();

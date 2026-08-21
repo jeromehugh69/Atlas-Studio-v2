@@ -6,6 +6,8 @@ import hmac
 import hashlib
 import json
 import os
+import shutil
+import subprocess
 from pathlib import Path
 import re
 import secrets
@@ -864,6 +866,49 @@ async def create_workflow_definition(body: WorkflowDefinitionCreate):
 @app.get("/api/worker/health")
 async def worker_health():
     return await implementation_worker.health()
+
+
+_opencode_process: subprocess.Popen | None = None
+
+
+async def _opencode_online() -> bool:
+    try:
+        async with httpx.AsyncClient(timeout=2.0) as client:
+            response = await client.get(settings.opencode_web_url)
+            return response.status_code < 500
+    except Exception:
+        return False
+
+
+@app.get("/api/opencode/status")
+async def opencode_status():
+    return {"online": await _opencode_online(), "url": settings.opencode_web_url}
+
+
+@app.post("/api/opencode/launch")
+async def opencode_launch():
+    global _opencode_process
+    if await _opencode_online():
+        return {"started": False, "reason": "already running", "url": settings.opencode_web_url}
+    port = re.sub(r".*:(\d+)$", r"\1", settings.opencode_web_url)
+    resolved = shutil.which("opencode")
+    if not resolved:
+        raise HTTPException(500, "opencode CLI not found on PATH")
+    command = ["cmd", "/c", resolved] if resolved.lower().endswith((".cmd", ".bat")) else [resolved]
+    creationflags = getattr(subprocess, "CREATE_NO_WINDOW", 0) if os.name == "nt" else 0
+    _opencode_process = subprocess.Popen(
+        [*command, "web", "--port", port, "--hostname", "127.0.0.1"],
+        cwd=str(settings.opencode_cwd.resolve()),
+        creationflags=creationflags,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        shell=False,
+    )
+    for _ in range(30):
+        await asyncio.sleep(1)
+        if await _opencode_online():
+            return {"started": True, "url": settings.opencode_web_url}
+    raise HTTPException(504, "opencode web did not become ready within 30s")
 
 
 @app.post("/api/worker/actions")

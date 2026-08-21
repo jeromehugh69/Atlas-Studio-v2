@@ -237,7 +237,14 @@
     </section>
 
     <section id="terminal" class="view developer-page">
-      <div class="feature-heading"><div><p class="eyebrow">DEVELOPMENT CONSOLE</p><h2>Terminal</h2><p>Interactive console for viewing change sets, plans, tasks, and lifecycle stages. Type <code>help</code> for available commands.</p></div><span class="feature-counter">CONSOLE</span></div>
+      <div class="feature-heading"><div><p class="eyebrow">DEVELOPMENT CONSOLE</p><h2>Terminal</h2><p>OpenCode agent console with plan/build modes — it reads this codebase and asks your permission before every edit or command. Fallback: type <code>help</code> in the legacy console below.</p></div><span class="feature-counter">CONSOLE</span></div>
+      <div id="opencodeOffline" class="opencode-offline" hidden>
+        <span>OpenCode agent console is offline.</span>
+        <button id="opencodeStart" type="button">Start OpenCode</button>
+      </div>
+      <div id="opencodeEmbed" class="opencode-embed" hidden>
+        <iframe id="opencodeFrame" title="OpenCode agent console" src="about:blank"></iframe>
+      </div>
       <div class="terminal-container">
         <div id="terminalOutput" class="terminal-output" role="log" aria-live="polite"></div>
         <form id="terminalInput" class="terminal-input-row">

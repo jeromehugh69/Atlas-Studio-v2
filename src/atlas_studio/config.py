@@ -40,6 +40,8 @@ class Settings(BaseSettings):
     sandbox_cpus: float = Field(1.0, gt=0, le=16)
     sandbox_pids: int = Field(128, ge=16, le=4096)
     worker_url: str = "http://localhost:8092"
+    opencode_web_url: str = "http://127.0.0.1:4096"
+    opencode_cwd: Path = Path(".")
     worker_token: str = "atlas-local-worker"
     research_worker_url: str = "http://localhost:8093"
     research_worker_token: str = "atlas-local-research"
