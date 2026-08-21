@@ -17,6 +17,7 @@ Documenting progress on the Atlas Studio conversational chat pipeline, including
 - **Change 007** — Chat UI resized to industry standards (14px messages, resizable/maximizable panel), dashboard scrolls as one page with docked sticky chat, restored history renders on reload, "New session" button resets feed + storage + session id
 - **Change 008** — OpenCode agent console embedded in Terminal view with permission gating (`opencode.json`: edit/bash ask)
 - **Change 009** — OpenCode tab in top navigation + tabbed Terminal view; dark/monospace proxy; non-cloud routing through Atlas's `/v1` gateway (verified headless)
+- **Change 010** — OpenCode governance mirror: sessions auto-file governed intake approvals, permission/tool/idle events audited; console deep-links into workspace (`?directory=`); stale OFFLINE banner re-probe fix
 
 See [`docs/changes/`](../changes/) for details.
 

@@ -770,7 +770,10 @@
     legacyPane?.classList.toggle("active", !openCodeActive);
   }
 
-  opencodeTabButton?.addEventListener("click", () => selectTab("opencode"));
+  opencodeTabButton?.addEventListener("click", () => {
+    selectTab("opencode");
+    void probe();
+  });
   legacyTabButton?.addEventListener("click", () => selectTab("legacy"));
 
   function showOnline(url) {
@@ -814,7 +817,10 @@
     }
   });
 
-  document.getElementById("navOpenCode")?.addEventListener("click", () => selectTab("opencode"));
+  document.getElementById("navOpenCode")?.addEventListener("click", () => {
+    selectTab("opencode");
+    void probe();
+  });
 
   void probe();
 })();

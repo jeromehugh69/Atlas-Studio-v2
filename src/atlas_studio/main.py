@@ -13,6 +13,7 @@ from pathlib import Path
 import re
 import secrets
 import time
+from urllib.parse import quote
 from uuid import UUID, uuid4
 
 import httpx
@@ -35,7 +36,7 @@ from .layers.lifecycle_catalog import lifecycle_governance_catalog
 from .layers.security import SecurityPolicy, build_security_posture
 from .layers.specialist import ReadOnlySpecialistToolLoop
 from .layers.task_queue import DurablePriorityQueue, PRIORITY_ORDER
-from .models import Agent, AgentCreate, AgentUpdate, ApprovalChallengeResponse, ApprovedSearchRequest, AtlasIntakeRequest, AuditEvent, AvatarGeneration, ChangeSet, ChangeSetApproval, ChangeSetCommitRequest, ChangeSetTestRequest, DevelopmentLifecycle, ExternalActionApproval, ExternalActionDecision, ExternalActionRequest, LibraryChange, LibraryChangeRequest, LifecycleCreate, LifecycleNotificationDecision, LifecycleOverride, LifecycleTransition, Plan, PlanCreate, PlanDecision, PlanRecommendationUpdate, PlanReviewerRequest, PlanWorkspace, ProtectedActionRequest, QaPipelineRunRequest, SourceAdditionRequest, SpeechSynthesisRequest, Task, TaskCreate, ToolAccessRequest, WorkerActionRequest, WorkflowDefinition, WorkflowDefinitionCreate, WorkflowRequestCreate
+from .models import Agent, AgentCreate, AgentUpdate, ApprovalChallengeResponse, ApprovedSearchRequest, AtlasIntakeRequest, AuditEvent, AvatarGeneration, ChangeSet, ChangeSetApproval, ChangeSetCommitRequest, ChangeSetTestRequest, DevelopmentLifecycle, ExternalActionApproval, ExternalActionDecision, ExternalActionRequest, LibraryChange, LibraryChangeRequest, LifecycleCreate, LifecycleNotificationDecision, LifecycleOverride, LifecycleTransition, OpenCodeMirrorEvent, Plan, PlanCreate, PlanDecision, PlanRecommendationUpdate, PlanReviewerRequest, PlanWorkspace, ProtectedActionRequest, QaPipelineRunRequest, SourceAdditionRequest, SpeechSynthesisRequest, Task, TaskCreate, ToolAccessRequest, WorkerActionRequest, WorkflowDefinition, WorkflowDefinitionCreate, WorkflowRequestCreate
 from .providers import LiteLLMProvider, ProviderError, ProviderGateway
 from .speech_text import prepare_speech_text
 from .tts import synthesize_speech as chatterbox_synthesize, preload_model as preload_tts, resolve_audio_prompt as resolve_tts_audio_prompt
@@ -903,15 +904,20 @@ async def _opencode_proxy_online() -> bool:
         return False
 
 
+def _opencode_embed_url(base: str) -> str:
+    return f"{base}/?directory={quote(str(settings.opencode_cwd.resolve()), safe='')}"
+
+
 @app.get("/api/opencode/status")
 async def opencode_status():
     online = await _opencode_online()
     proxy_online = await _opencode_proxy_online()
+    base = settings.opencode_proxy_url if proxy_online else settings.opencode_web_url
     return {
         "online": online,
         "proxy_online": proxy_online,
         "url": settings.opencode_web_url,
-        "embed_url": settings.opencode_proxy_url if proxy_online else settings.opencode_web_url,
+        "embed_url": _opencode_embed_url(base),
     }
 
 
@@ -946,7 +952,35 @@ async def opencode_launch():
                 if await _opencode_proxy_online():
                     break
 
-    return {"started": True, "url": settings.opencode_web_url, "embed_url": settings.opencode_proxy_url}
+    return {
+        "started": True,
+        "url": settings.opencode_web_url,
+        "embed_url": _opencode_embed_url(settings.opencode_proxy_url),
+    }
+
+
+def _sanitize_mirror_detail(detail: dict) -> dict:
+    sanitized = {}
+    for key, value in list(detail.items())[:20]:
+        text = value if isinstance(value, str) else json.dumps(value, default=str)
+        sanitized[str(key)[:100]] = text[:500]
+    return sanitized
+
+
+@app.post("/api/opencode/mirror", status_code=202)
+async def opencode_mirror(event: OpenCodeMirrorEvent):
+    title = (event.title or "").strip() or event.kind.replace("_", " ")
+    store.log(
+        AuditEvent(
+            action=f"opencode.{event.kind}",
+            actor="opencode",
+            target=event.session_id,
+            outcome="mirrored",
+            details={"title": title, **_sanitize_mirror_detail(event.detail)},
+        )
+    )
+    await infrastructure.persist_audit(store.audit[0])
+    return {"ok": True}
 
 
 @app.post("/api/worker/actions")

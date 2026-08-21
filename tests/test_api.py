@@ -953,3 +953,37 @@ def test_atlas_request_skill_and_inline_modal_are_bundled():
     panel = client.get("/static/atlas-chat-panel.html")
     assert panel.status_code == 200
     assert 'id="atlasApprovalDialog"' in panel.text
+
+
+def test_opencode_mirror_event_is_sanitized_and_audited(monkeypatch):
+    async def persist(_item):
+        return None
+
+    monkeypatch.setattr(main_module.infrastructure, "persist_audit", persist)
+
+    response = client.post(
+        "/api/opencode/mirror",
+        json={
+            "session_id": "ses_test123",
+            "kind": "permission_asked",
+            "title": "Edit src/app.py",
+            "detail": {"pattern": "x" * 900},
+        },
+    )
+
+    assert response.status_code == 202
+    assert response.json() == {"ok": True}
+    event = main_module.store.audit[0]
+    assert event.action == "opencode.permission_asked"
+    assert event.actor == "opencode"
+    assert event.target == "ses_test123"
+    assert event.details["title"] == "Edit src/app.py"
+    assert len(event.details["pattern"]) == 500
+
+
+def test_opencode_mirror_rejects_unknown_kind():
+    response = client.post(
+        "/api/opencode/mirror",
+        json={"session_id": "ses_test123", "kind": "bogus_kind"},
+    )
+    assert response.status_code == 422

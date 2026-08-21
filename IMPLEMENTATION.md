@@ -439,6 +439,18 @@ A standalone increment is complete only when:
 
 ## 9. Recent Progress
 
+### OpenCode Governance Mirror + Deep-Link Console (2026-08-21)
+
+**Document:** [`docs/changes/010-opencode-governance-mirror.md`](docs/changes/010-opencode-governance-mirror.md)
+
+**Summary:**
+- New `.opencode/plugin/atlas-governance.js`: first user message per session files a governed intake (`POST /api/atlas/intake` -> one-click Plan approval); permission asks, tool results, and idle summaries mirror into the audit trail via new `POST /api/opencode/mirror` (sanitized, truncated)
+- Console `embed_url` now deep-links with `?directory=<repo>` — skips OpenCode's session-picker portal entirely
+- Terminal tab / nav clicks re-probe `/api/opencode/status`, fixing the stale OFFLINE banner after transient failures
+- Verified live: change-style prompt produced a pending `plan_intake` approval; conversational prompt produced a completed Atlas task
+
+**Status:** Completed
+
 ### OpenCode Dark Console Tabs + Atlas-Synced Routing (2026-08-21)
 
 **Document:** [`docs/changes/009-opencode-dark-console-synced-routing.md`](docs/changes/009-opencode-dark-console-synced-routing.md)

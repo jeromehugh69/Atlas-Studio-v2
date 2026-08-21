@@ -401,3 +401,10 @@ class AvatarGeneration(BaseModel):
     message: str = "Queued for local generation"
     artifact_url: str | None = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class OpenCodeMirrorEvent(BaseModel):
+    session_id: str = Field(min_length=1, max_length=200)
+    kind: Literal["permission_asked", "permission_replied", "tool_success", "tool_failed", "session_idle"]
+    title: str | None = Field(default=None, max_length=300)
+    detail: dict = Field(default_factory=dict)
