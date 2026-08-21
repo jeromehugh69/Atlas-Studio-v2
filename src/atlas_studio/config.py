@@ -51,6 +51,7 @@ class Settings(BaseSettings):
     google_oauth_client_secret: str = ""
     stt_url: str = ""
     tts_url: str = ""
+    tts_audio_prompt: str = ""  # Empty = auto-use bundled female reference voice
     avatar_local_enabled: bool = False
     avatar_provider: Literal["triposr-local"] = "triposr-local"
     avatar_service_url: str = "http://localhost:8090"

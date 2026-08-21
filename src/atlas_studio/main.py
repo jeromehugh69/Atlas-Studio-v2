@@ -35,7 +35,7 @@ from .layers.task_queue import DurablePriorityQueue, PRIORITY_ORDER
 from .models import Agent, AgentCreate, AgentUpdate, ApprovalChallengeResponse, ApprovedSearchRequest, AtlasIntakeRequest, AuditEvent, AvatarGeneration, ChangeSet, ChangeSetApproval, ChangeSetCommitRequest, ChangeSetTestRequest, DevelopmentLifecycle, ExternalActionApproval, ExternalActionDecision, ExternalActionRequest, LibraryChange, LibraryChangeRequest, LifecycleCreate, LifecycleNotificationDecision, LifecycleOverride, LifecycleTransition, Plan, PlanCreate, PlanDecision, PlanRecommendationUpdate, PlanReviewerRequest, PlanWorkspace, ProtectedActionRequest, QaPipelineRunRequest, SourceAdditionRequest, SpeechSynthesisRequest, Task, TaskCreate, ToolAccessRequest, WorkerActionRequest, WorkflowDefinition, WorkflowDefinitionCreate, WorkflowRequestCreate
 from .providers import LiteLLMProvider, ProviderError, ProviderGateway
 from .speech_text import prepare_speech_text
-from .tts import synthesize_speech as chatterbox_synthesize, preload_model as preload_tts
+from .tts import synthesize_speech as chatterbox_synthesize, preload_model as preload_tts, resolve_audio_prompt as resolve_tts_audio_prompt
 from .skill_runtime import SkillRuntime
 from .store import ArtifactStore, MemoryStore
 from .workspace_browser import WorkspaceBrowser, WorkspacePathError
@@ -2775,12 +2775,13 @@ async def synthesize_local_speech(body: SpeechSynthesisRequest):
     if not spoken_text:
         raise HTTPException(422, "The response contains no natural-language content to speak.")
 
-    # Try ChatterboxTTS first (local CPU)
+    # Try ChatterboxTTS first (local CPU), cloned to the configured female reference voice
     try:
-        audio_bytes = await asyncio.to_thread(chatterbox_synthesize, spoken_text)
+        voice_prompt = resolve_tts_audio_prompt(settings.tts_audio_prompt)
+        audio_bytes = await asyncio.to_thread(chatterbox_synthesize, spoken_text, 0.5, 0.5, voice_prompt)
         event = AuditEvent(
             action="speech.synthesize", actor="Atlas", target="local-speaker",
-            outcome="completed", details={"source_characters": len(body.text), "spoken_characters": len(spoken_text), "backend": "chatterbox"},
+            outcome="completed", details={"source_characters": len(body.text), "spoken_characters": len(spoken_text), "backend": "chatterbox", "voice_prompt": str(voice_prompt or "default")},
         )
         store.log(event)
         await infrastructure.persist_audit(event)

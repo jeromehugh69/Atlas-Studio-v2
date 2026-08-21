@@ -166,6 +166,7 @@ You are Atlas, a senior platform engineer AI for Atlas Studio. Respond in 1-3 se
 **Symptom:** Atlas voice is male, user wants female
 **Cause:** ChatterboxTTS uses default voice without reference audio
 **Fix:** Add female voice reference audio file and configure `audio_prompt_path`
+**Resolved 2026-08-21:** see [`docs/changes/005-atlas-female-voice.md`](../changes/005-atlas-female-voice.md) — bundled female reference voice is now the default
 
 ## Testing
 
@@ -200,11 +201,11 @@ Invoke-RestMethod -Uri "http://127.0.0.1:8080/api/dev/log" -Method POST -Content
 
 ## Next Steps
 
-1. **Investigate female voice** for Atlas (Piper/Kokoro TTS or ChatterboxTTS reference audio)
-2. **Fix Ollama connection timeout** with auto-reconnect
-3. **Separate thinking token budget** for qwen3
-4. **Add chat history persistence**
-5. **Implement streaming responses** in chat panel
+1. ~~**Investigate female voice** for Atlas~~ — Done 2026-08-21 (change 005)
+2. ~~**Fix Ollama connection timeout** with auto-reconnect~~ — Done 2026-08-21 (change 004)
+3. ~~**Separate thinking token budget** for qwen3~~ — Done 2026-08-21 (change 004)
+4. ~~**Add chat history persistence**~~ — Done 2026-08-21 (change 004)
+5. ~~**Implement streaming responses** in chat panel~~ — Done 2026-08-21 (change 004)
 6. **Verify theme toggle** end-to-end with hard refresh
 
 ## Git History

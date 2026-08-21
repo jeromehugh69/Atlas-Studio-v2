@@ -439,6 +439,18 @@ A standalone increment is complete only when:
 
 ## 9. Recent Progress
 
+### Atlas Female Voice (2026-08-21)
+
+**Document:** [`docs/changes/005-atlas-female-voice.md`](docs/changes/005-atlas-female-voice.md)
+
+**Summary:**
+- Bundled CC0 female reference voice (LJSpeech samples, 20s WAV) at `models/voice/atlas-female-ref.wav`
+- ChatterboxTTS now voice-clones the reference via `audio_prompt_path` — Atlas speaks with a female voice by default
+- New `ATLAS_STUDIO_TTS_AUDIO_PROMPT` setting: override with a custom ~20s WAV or set `none` for engine default
+- Audit events record which voice prompt was used per synthesis
+
+**Status:** Completed
+
 ### Chat Streaming, History Persistence, and Provider Resilience (2026-08-21)
 
 **Document:** [`docs/changes/004-chat-streaming-history-and-provider-resilience.md`](docs/changes/004-chat-streaming-history-and-provider-resilience.md)
