@@ -128,6 +128,16 @@ button { cursor: pointer; }
 .delegation-card-prompt { color: #6a909c; font: 580 .54rem/1.4 ui-monospace, monospace; padding-left: 8px; border-left: 2px solid rgba(41,210,238,.15); }
 .delegation-card-status { display: inline-flex; align-items: center; gap: 5px; margin-top: 6px; padding: 3px 7px; border: 1px solid rgba(41,210,238,.2); border-radius: 5px; color: #5e8a96; background: rgba(41,210,238,.05); font: 600 .48rem/1 ui-monospace, monospace; }
 .delegation-card-status .pulse { width: 5px; height: 5px; border-radius: 50%; background: var(--cyan); animation: statusPulse 1s ease-in-out infinite; }
+.message-body .chat-status-card { margin: 6px 0; border: 1px solid rgba(41,210,238,.25); border-left: 3px solid rgba(41,210,238,.6); border-radius: 8px; background: rgba(41,210,238,.04); overflow: hidden; }
+.message-body .chat-status-head { display: flex; align-items: center; gap: 7px; padding: 7px 11px; border-bottom: 1px solid rgba(41,210,238,.15); color: #b9dce6; font: 700 .58rem/1 ui-monospace, monospace; letter-spacing: .08em; }
+.message-body .chat-status-head .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--cyan); box-shadow: 0 0 8px var(--cyan); animation: statusPulse 1s ease-in-out infinite; }
+.message-body .chat-status-row { display: grid; grid-template-columns: minmax(90px, 34%) 1fr; gap: 8px; padding: 6px 11px; font: 560 .56rem/1.45 ui-monospace, monospace; }
+.message-body .chat-status-row + .chat-status-row { border-top: 1px solid rgba(126,170,190,.08); }
+.message-body .chat-status-row .k { color: #6d939f; text-transform: uppercase; letter-spacing: .05em; }
+.message-body .chat-status-row .v { color: #c3d9e0; }
+.message-body .chat-status-row .v.ok { color: #7fd6a4; }
+.message-body .chat-status-row .v.warn { color: #e8c268; }
+.message-body .chat-status-row .v.bad { color: #ef8a8a; }
 .message-tools { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 9px; }
 .message-tools span { padding: 3px 5px; border: 1px solid rgba(61,115,135,.25); border-radius: 5px; color: #618490; background: rgba(18,61,73,.09); font: 650 .48rem/1 ui-monospace, monospace; }
 .response-context { margin-top: 8px; border-top: 1px solid rgba(126,170,190,.1); }

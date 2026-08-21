@@ -5,6 +5,8 @@
 
   function formatAtlasMarkdown(text) {
     if (!text) return "";
+    const statusCard = tryRenderStatusCard(text);
+    if (statusCard) return statusCard;
     const lines = text.split("\n");
     let html = "";
     let inCodeBlock = false;
@@ -49,6 +51,26 @@
       s = s.replace(/~~(.+?)~~/g, "<del>$1</del>");
       s = s.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a class="chat-link" href="$2" target="_blank" rel="noopener">$1</a>');
       return s;
+    }
+
+    function tryRenderStatusCard(t) {
+      if (t.length > 2500 || t.includes("```")) return null;
+      const pair = /^([A-Za-z][\w /()&+'-]{1,40}):\s*(.+?)\.?\s*$/;
+      const rows = [];
+      for (const chunk of t.split(/\.\s+(?=[A-Z])|\n+/)) {
+        const m = pair.exec(chunk.trim());
+        if (!m) return null;
+        rows.push([m[1].trim(), m[2].trim()]);
+      }
+      if (rows.length < 3) return null;
+      let html = '<div class="chat-status-card"><div class="chat-status-head"><span class="dot"></span>PLATFORM STATUS</div>';
+      for (const [k, v] of rows) {
+        const s = v.toLowerCase();
+        const tone = /fail|critical|blocker|error|down|urgent/.test(s) ? "bad"
+          : /pending|in progress|awaiting|queued|review/.test(s) ? "warn" : "ok";
+        html += `<div class="chat-status-row"><span class="k">${escapeHtml(k)}</span><span class="v ${tone}">${inlineFormat(escapeHtml(v))}</span></div>`;
+      }
+      return html + "</div>";
     }
 
     for (let i = 0; i < lines.length; i++) {

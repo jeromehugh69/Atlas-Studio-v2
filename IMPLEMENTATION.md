@@ -439,6 +439,17 @@ A standalone increment is complete only when:
 
 ## 9. Recent Progress
 
+### Status Report Cards in Chat Feed (2026-08-21)
+
+**Document:** [`docs/changes/006-status-report-cards.md`](docs/changes/006-status-report-cards.md)
+
+**Summary:**
+- Atlas status reports auto-render as a structured card in the chat feed: PLATFORM STATUS header + color-coded rows (green healthy / amber attention / red action)
+- Frontend-only detection in `chat-format.js` — ≥3 `Label: value` fields, all other prose unchanged
+- Works during streaming; card fills in live
+
+**Status:** Completed
+
 ### Atlas Female Voice (2026-08-21)
 
 **Document:** [`docs/changes/005-atlas-female-voice.md`](docs/changes/005-atlas-female-voice.md)
