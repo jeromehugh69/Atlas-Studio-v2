@@ -36,19 +36,24 @@ Atlas outages never block OpenCode.
 - `permission.asked/replied`, tool success/failure, `session.idle` ->
   mirror endpoint as audit entries
 
-### 3. Deep-link embed URL (`main.py`)
+### 3. Deep-link embed URL (`main.py`, `scripts/opencode_dark_proxy.py`)
 - `/api/opencode/status` and `/launch` return
-  `embed_url = {proxy}/?directory={urlencoded repo path}` - OpenCode's SPA
-  reads `?directory=` and opens straight into the workspace console instead
-  of its settings/session portal
+  `embed_url = {proxy}/?directory={urlencoded repo path}`
+- The proxy injects OpenCode's official deep-entry protocol into the page
+  when that query is present: `window.__OPENCODE__.deepLinks =
+  ["opencode://new-session?directory=..."]` - the SPA boots straight into a
+  new session in the workspace instead of its session-picker portal. Bare
+  loads (no query) are injected with theme/mono only
 
-### 4. Stale OFFLINE banner fix (`static/index.html`, `static/terminal.js`)
-- Status probe ran only once per page load; a transient failure (e.g. Atlas
-  restarting) pinned OFFLINE forever. Selecting the OpenCode tab or nav
-  button now re-probes before rendering, and an 8-second interval re-probes
-  whenever the OFFLINE strip is visible so recovery is automatic
-- `terminal.js` script tag cache-busted (`?v=010`) since static responses
-  carry no Cache-Control header
+### 4. Stale OFFLINE banner fix (`static/index.html`, `static/terminal.css`, `static/terminal.js`)
+- Root cause of the phantom OFFLINE strip: `.opencode-offline { display:flex }`
+  overrode the HTML `hidden` attribute, so it rendered even when online.
+  Added `.opencode-offline[hidden]` / `.opencode-embed[hidden] { display:none }`
+- Selecting the OpenCode tab or nav button re-probes status, and an
+  8-second interval re-probes while the strip is visible so recovery is
+  automatic
+- `terminal.css`/`terminal.js` script tags cache-busted (`?v=011`) since
+  static responses carry no Cache-Control header
 
 ## Verification
 

@@ -343,6 +343,8 @@ html.light-mode .terminal-help .description {
 }
 
 .opencode-embed { margin-bottom: 14px; border: 1px solid var(--terminal-line, #213654); border-radius: 10px; overflow: hidden; background: #050914; }
+.opencode-embed[hidden] { display: none; }
+.opencode-offline[hidden] { display: none; }
 .opencode-embed iframe { display: block; width: 100%; height: min(72vh, 780px); border: 0; background: #050914; }
 .opencode-offline { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px; padding: 12px 14px; border: 1px dashed var(--terminal-line, #213654); border-radius: 10px; color: #8fa4ca; font: 600 11px/1.4 ui-monospace, monospace; }
 .opencode-offline button { padding: 8px 14px; border: 1px solid rgba(85, 217, 255, .45); border-radius: 7px; color: #d4f7ff; background: linear-gradient(135deg, rgba(17, 129, 153, .5), rgba(28, 86, 131, .6)); font: 700 10px/1 ui-monospace, monospace; cursor: pointer; }
