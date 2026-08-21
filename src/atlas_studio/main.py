@@ -8,6 +8,7 @@ import json
 import os
 import shutil
 import subprocess
+import sys
 from pathlib import Path
 import re
 import secrets
@@ -869,6 +870,7 @@ async def worker_health():
 
 
 _opencode_process: subprocess.Popen | None = None
+_opencode_proxy: subprocess.Popen | None = None
 
 
 async def _opencode_online() -> bool:
@@ -880,35 +882,71 @@ async def _opencode_online() -> bool:
         return False
 
 
-@app.get("/api/opencode/status")
-async def opencode_status():
-    return {"online": await _opencode_online(), "url": settings.opencode_web_url}
-
-
-@app.post("/api/opencode/launch")
-async def opencode_launch():
-    global _opencode_process
-    if await _opencode_online():
-        return {"started": False, "reason": "already running", "url": settings.opencode_web_url}
-    port = re.sub(r".*:(\d+)$", r"\1", settings.opencode_web_url)
-    resolved = shutil.which("opencode")
-    if not resolved:
-        raise HTTPException(500, "opencode CLI not found on PATH")
-    command = ["cmd", "/c", resolved] if resolved.lower().endswith((".cmd", ".bat")) else [resolved]
+def _spawn_detached(command: list[str], cwd: Path | None = None) -> subprocess.Popen:
     creationflags = getattr(subprocess, "CREATE_NO_WINDOW", 0) if os.name == "nt" else 0
-    _opencode_process = subprocess.Popen(
-        [*command, "web", "--port", port, "--hostname", "127.0.0.1"],
-        cwd=str(settings.opencode_cwd.resolve()),
+    return subprocess.Popen(
+        command,
+        cwd=str(cwd) if cwd else None,
         creationflags=creationflags,
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
         shell=False,
     )
-    for _ in range(30):
-        await asyncio.sleep(1)
-        if await _opencode_online():
-            return {"started": True, "url": settings.opencode_web_url}
-    raise HTTPException(504, "opencode web did not become ready within 30s")
+
+
+async def _opencode_proxy_online() -> bool:
+    try:
+        async with httpx.AsyncClient(timeout=2.0) as client:
+            response = await client.get(settings.opencode_proxy_url + "/api/health")
+            return response.status_code < 500
+    except Exception:
+        return False
+
+
+@app.get("/api/opencode/status")
+async def opencode_status():
+    online = await _opencode_online()
+    proxy_online = await _opencode_proxy_online()
+    return {
+        "online": online,
+        "proxy_online": proxy_online,
+        "url": settings.opencode_web_url,
+        "embed_url": settings.opencode_proxy_url if proxy_online else settings.opencode_web_url,
+    }
+
+
+@app.post("/api/opencode/launch")
+async def opencode_launch():
+    global _opencode_process, _opencode_proxy
+    if not await _opencode_online():
+        port = re.sub(r".*:(\d+)$", r"\1", settings.opencode_web_url)
+        resolved = shutil.which("opencode")
+        if not resolved:
+            raise HTTPException(500, "opencode CLI not found on PATH")
+        command = ["cmd", "/c", resolved] if resolved.lower().endswith((".cmd", ".bat")) else [resolved]
+        _opencode_process = _spawn_detached(
+            [*command, "web", "--port", port, "--hostname", "127.0.0.1"], cwd=settings.opencode_cwd
+        )
+        for _ in range(30):
+            await asyncio.sleep(1)
+            if await _opencode_online():
+                break
+        else:
+            raise HTTPException(504, "opencode web did not become ready within 30s")
+
+    if not await _opencode_proxy_online():
+        script = Path(__file__).resolve().parents[2] / "scripts" / "opencode_dark_proxy.py"
+        if script.exists():
+            proxy_port = re.sub(r".*:(\d+)$", r"\1", settings.opencode_proxy_url)
+            _opencode_proxy = _spawn_detached(
+                [sys.executable, str(script), "--port", proxy_port, "--target", settings.opencode_web_url]
+            )
+            for _ in range(10):
+                await asyncio.sleep(1)
+                if await _opencode_proxy_online():
+                    break
+
+    return {"started": True, "url": settings.opencode_web_url, "embed_url": settings.opencode_proxy_url}
 
 
 @app.post("/api/worker/actions")

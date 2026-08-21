@@ -1,5 +1,19 @@
 {
   "$schema": "https://opencode.ai/config.json",
+  "model": "atlas-local/qwen3:1.7b",
+  "provider": {
+    "atlas-local": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "Atlas Studio Local",
+      "options": {
+        "baseURL": "http://127.0.0.1:8080/v1"
+      },
+      "models": {
+        "qwen3:1.7b": { "name": "qwen3 1.7B (via Atlas)" },
+        "qwen3:4b": { "name": "qwen3 4B (via Atlas)" }
+      }
+    }
+  },
   "permission": {
     "edit": "ask",
     "webfetch": "allow",

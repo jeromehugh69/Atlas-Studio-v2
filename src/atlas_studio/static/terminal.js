@@ -753,24 +753,45 @@
   const frame = document.getElementById("opencodeFrame");
   const offline = document.getElementById("opencodeOffline");
   const startButton = document.getElementById("opencodeStart");
+  const opencodeTabButton = document.getElementById("opencodeTabButton");
+  const legacyTabButton = document.getElementById("legacyTabButton");
+  const opencodePane = document.getElementById("opencodePane");
+  const legacyPane = document.getElementById("legacyPane");
+  const tabStatus = document.getElementById("opencodeTabStatus");
   if (!embed || !frame || !offline) return;
 
+  function selectTab(which) {
+    const openCodeActive = which !== "legacy";
+    opencodeTabButton?.classList.toggle("active", openCodeActive);
+    opencodeTabButton?.setAttribute("aria-selected", String(openCodeActive));
+    legacyTabButton?.classList.toggle("active", !openCodeActive);
+    legacyTabButton?.setAttribute("aria-selected", String(!openCodeActive));
+    opencodePane?.classList.toggle("active", openCodeActive);
+    legacyPane?.classList.toggle("active", !openCodeActive);
+  }
+
+  opencodeTabButton?.addEventListener("click", () => selectTab("opencode"));
+  legacyTabButton?.addEventListener("click", () => selectTab("legacy"));
+
   function showOnline(url) {
-    if (frame.src !== url) frame.src = url;
+    if (!frame.src.endsWith(url)) frame.src = url;
     embed.hidden = false;
     offline.hidden = true;
+    selectTab("opencode");
+    if (tabStatus) tabStatus.textContent = "OPENCODE ONLINE";
   }
 
   function showOffline() {
     embed.hidden = true;
     offline.hidden = false;
+    if (tabStatus) tabStatus.textContent = "OFFLINE";
   }
 
   async function probe() {
     try {
       const response = await fetch("/api/opencode/status");
       const data = await response.json();
-      if (data.online) showOnline(data.url);
+      if (data.online) showOnline(data.embed_url || data.url);
       else showOffline();
     } catch (_) {
       showOffline();
@@ -783,7 +804,7 @@
     try {
       const response = await fetch("/api/opencode/launch", { method: "POST" });
       const data = await response.json();
-      if (data.url) showOnline(data.url);
+      if (data.embed_url || data.url) showOnline(data.embed_url || data.url);
       else showOffline();
     } catch (_) {
       showOffline();
@@ -792,6 +813,8 @@
       startButton.textContent = "Start OpenCode";
     }
   });
+
+  document.getElementById("navOpenCode")?.addEventListener("click", () => selectTab("opencode"));
 
   void probe();
 })();

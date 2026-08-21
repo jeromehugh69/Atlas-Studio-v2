@@ -439,6 +439,18 @@ A standalone increment is complete only when:
 
 ## 9. Recent Progress
 
+### OpenCode Dark Console Tabs + Atlas-Synced Routing (2026-08-21)
+
+**Document:** [`docs/changes/009-opencode-dark-console-synced-routing.md`](docs/changes/009-opencode-dark-console-synced-routing.md)
+
+**Summary:**
+- Persistent "OpenCode" tab in the top navigation (beside Build); Terminal view now tabbed: OpenCode Console vs Legacy Terminal
+- Dark-theme/monospace reverse proxy (:8096) injects forced dark scheme + mono fonts into the embedded console
+- Non-cloud model routing: OpenCode's `atlas-local` provider points at Atlas's `/v1` adapter — all inference flows through Atlas's gateway (audit, retries); verified headless (`SYNC-OK` via `/v1/chat/completions 200`)
+- `/v1/chat/completions` passes client system prompts through untouched
+
+**Status:** Completed
+
 ### OpenCode Agent Console Terminal Embed (2026-08-21)
 
 **Document:** [`docs/changes/008-opencode-terminal-embed.md`](docs/changes/008-opencode-terminal-embed.md)

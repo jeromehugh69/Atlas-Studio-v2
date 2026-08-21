@@ -113,7 +113,9 @@ async def chat_completions(body: OAChatRequest):
     settings = get_settings()
     model = body.model or settings.default_model
 
-    messages = [{"role": "system", "content": _build_atlas_system_prompt()}]
+    messages = []
+    if not any(msg.role == "system" for msg in body.messages):
+        messages.append({"role": "system", "content": _build_atlas_system_prompt()})
     for msg in body.messages:
         messages.append(_oa_message(msg))
 
