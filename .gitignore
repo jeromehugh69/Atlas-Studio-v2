@@ -14,3 +14,5 @@ audit.jsonl
 proxy.log
 proxy_err.log
 tools/
+tui.log
+tui_err.log
