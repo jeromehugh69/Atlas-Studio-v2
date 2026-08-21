@@ -42,10 +42,13 @@ Atlas outages never block OpenCode.
   reads `?directory=` and opens straight into the workspace console instead
   of its settings/session portal
 
-### 4. Stale OFFLINE banner fix (`static/terminal.js`)
+### 4. Stale OFFLINE banner fix (`static/index.html`, `static/terminal.js`)
 - Status probe ran only once per page load; a transient failure (e.g. Atlas
   restarting) pinned OFFLINE forever. Selecting the OpenCode tab or nav
-  button now re-probes before rendering
+  button now re-probes before rendering, and an 8-second interval re-probes
+  whenever the OFFLINE strip is visible so recovery is automatic
+- `terminal.js` script tag cache-busted (`?v=010`) since static responses
+  carry no Cache-Control header
 
 ## Verification
 

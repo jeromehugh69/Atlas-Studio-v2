@@ -823,4 +823,7 @@
   });
 
   void probe();
+  setInterval(() => {
+    if (!offline.hidden) void probe();
+  }, 8000);
 })();
