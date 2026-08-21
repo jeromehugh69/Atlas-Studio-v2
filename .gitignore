@@ -7,5 +7,7 @@ data/
 artifacts/
 server.log
 server_err.log
+server-test.log
+server-test-err.log
 src/audit.jsonl
 audit.jsonl
