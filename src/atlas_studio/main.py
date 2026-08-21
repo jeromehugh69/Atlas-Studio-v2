@@ -873,12 +873,22 @@ async def worker_health():
 
 _opencode_process: subprocess.Popen | None = None
 _opencode_proxy: subprocess.Popen | None = None
+_opencode_tui: subprocess.Popen | None = None
 
 
 async def _opencode_online() -> bool:
     try:
         async with httpx.AsyncClient(timeout=2.0) as client:
             response = await client.get(settings.opencode_web_url)
+            return response.status_code < 500
+    except Exception:
+        return False
+
+
+async def _opencode_tui_online() -> bool:
+    try:
+        async with httpx.AsyncClient(timeout=2.0) as client:
+            response = await client.get(settings.opencode_tui_url + "/token")
             return response.status_code < 500
     except Exception:
         return False
@@ -917,18 +927,21 @@ def _opencode_embed_url(base: str) -> str:
 async def opencode_status():
     online = await _opencode_online()
     proxy_online = await _opencode_proxy_online()
+    tui_online = await _opencode_tui_online()
     base = settings.opencode_proxy_url if proxy_online else settings.opencode_web_url
     return {
         "online": online,
         "proxy_online": proxy_online,
+        "tui_online": tui_online,
         "url": settings.opencode_web_url,
         "embed_url": _opencode_embed_url(base),
+        "tui_url": settings.opencode_tui_url,
     }
 
 
 @app.post("/api/opencode/launch")
 async def opencode_launch():
-    global _opencode_process, _opencode_proxy
+    global _opencode_process, _opencode_proxy, _opencode_tui
     if not await _opencode_online():
         port = re.sub(r".*:(\d+)$", r"\1", settings.opencode_web_url)
         resolved = shutil.which("opencode")
@@ -957,10 +970,25 @@ async def opencode_launch():
                 if await _opencode_proxy_online():
                     break
 
+    tui_exe = Path(__file__).resolve().parents[2] / "tools" / "ttyd" / "ttyd.exe"
+    if not await _opencode_tui_online() and tui_exe.exists():
+        resolved = shutil.which("opencode")
+        if resolved:
+            tui_port = re.sub(r".*:(\d+)$", r"\1", settings.opencode_tui_url)
+            command = ["cmd", "/c", resolved] if resolved.lower().endswith((".cmd", ".bat")) else [resolved]
+            _opencode_tui = _spawn_detached(
+                [str(tui_exe), "-W", "-p", tui_port, *command], cwd=settings.opencode_cwd
+            )
+            for _ in range(10):
+                await asyncio.sleep(1)
+                if await _opencode_tui_online():
+                    break
+
     return {
         "started": True,
         "url": settings.opencode_web_url,
         "embed_url": _opencode_embed_url(settings.opencode_proxy_url),
+        "tui_url": settings.opencode_tui_url,
     }
 
 

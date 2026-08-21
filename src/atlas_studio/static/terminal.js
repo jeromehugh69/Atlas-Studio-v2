@@ -794,7 +794,9 @@
     try {
       const response = await fetch("/api/opencode/status");
       const data = await response.json();
-      if (data.online) showOnline(data.embed_url || data.url);
+      const url =
+        data.tui_online && data.tui_url ? data.tui_url : data.online ? data.embed_url || data.url : null;
+      if (url) showOnline(url);
       else showOffline();
     } catch (_) {
       showOffline();
@@ -805,10 +807,8 @@
     startButton.disabled = true;
     startButton.textContent = "Starting...";
     try {
-      const response = await fetch("/api/opencode/launch", { method: "POST" });
-      const data = await response.json();
-      if (data.embed_url || data.url) showOnline(data.embed_url || data.url);
-      else showOffline();
+      await fetch("/api/opencode/launch", { method: "POST" });
+      await probe();
     } catch (_) {
       showOffline();
     } finally {

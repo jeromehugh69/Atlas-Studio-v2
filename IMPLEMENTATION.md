@@ -445,8 +445,9 @@ A standalone increment is complete only when:
 
 **Summary:**
 - New `.opencode/plugin/atlas-governance.js`: first user message per session files a governed intake (`POST /api/atlas/intake` -> one-click Plan approval); permission asks, tool results, and idle summaries mirror into the audit trail via new `POST /api/opencode/mirror` (sanitized, truncated)
-- Console `embed_url` now deep-links with `?directory=<repo>` — skips OpenCode's session-picker portal entirely
-- Terminal tab / nav clicks re-probe `/api/opencode/status`, fixing the stale OFFLINE banner after transient failures
+- Console embed now renders the **real OpenCode TUI** (ttyd gateway, `tools/ttyd/`, port 7681) — same experience as VS Code terminal; web-SPA route kept as fallback
+- Console `embed_url` deep-links via OpenCode's native `/{base64url(dir)}/session` route — skips its session-picker home screen
+- Terminal tab / nav clicks re-probe `/api/opencode/status`; 8s self-healing probe while OFFLINE; `[hidden]` CSS fix for phantom strip
 - Verified live: change-style prompt produced a pending `plan_intake` approval; conversational prompt produced a completed Atlas task
 
 **Status:** Completed

@@ -13,3 +13,4 @@ src/audit.jsonl
 audit.jsonl
 proxy.log
 proxy_err.log
+tools/

@@ -57,6 +57,16 @@ Atlas outages never block OpenCode.
 - `terminal.css`/`terminal.js` script tags cache-busted (`?v=011`) since
   static responses carry no Cache-Control header
 
+### 5. Terminal TUI embed (`tools/ttyd/`, `config.py`, `main.py`, `static/terminal.js`)
+- The dashboard console now renders OpenCode's **real terminal UI** (the same
+  TUI as running `opencode` in a VS Code terminal) instead of the web SPA
+- Gateway: ttyd 1.7.7 single-exe (downloaded to gitignored `tools/ttyd/`),
+  spawned as `ttyd -W -p 7681 opencode` rooted at the repo
+- `GET /api/opencode/status` adds `tui_online` + `tui_url`; `POST /launch`
+  auto-starts ttyd when the exe exists; frontend prefers the TUI URL and
+  falls back to the web-SPA route when it is offline
+- New setting: `opencode_tui_url` (default `http://127.0.0.1:7681`)
+
 ## Verification
 
 - pytest: 82 passed (4 pre-existing failures deselected); new tests cover
@@ -65,6 +75,8 @@ Atlas outages never block OpenCode.
   created a completed Atlas task; `"Add a status badge..."` created a pending
   `plan_intake` approval ("Begin governed review for: Add a status badge...")
 - Audit shows `opencode.session_idle` entries for real sessions
+- ttyd: `/token` + root xterm page return 200; status reports all three
+  surfaces online (web, proxy, TUI)
 - `node --check` clean for `terminal.js` and the plugin
 
 ## Notes
