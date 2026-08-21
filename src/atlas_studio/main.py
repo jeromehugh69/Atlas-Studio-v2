@@ -1,4 +1,5 @@
 import asyncio
+import base64
 from collections import Counter
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta, timezone
@@ -905,7 +906,11 @@ async def _opencode_proxy_online() -> bool:
 
 
 def _opencode_embed_url(base: str) -> str:
-    return f"{base}/?directory={quote(str(settings.opencode_cwd.resolve()), safe='')}"
+    """OpenCode SPA route /{base64url(directory)}/session opens that
+    workspace's console directly, resuming the last session when the browser
+    has one - skipping its session-picker home screen."""
+    workspace = base64.urlsafe_b64encode(str(settings.opencode_cwd.resolve()).encode()).decode().rstrip("=")
+    return f"{base}/{workspace}/session"
 
 
 @app.get("/api/opencode/status")

@@ -36,14 +36,16 @@ Atlas outages never block OpenCode.
 - `permission.asked/replied`, tool success/failure, `session.idle` ->
   mirror endpoint as audit entries
 
-### 3. Deep-link embed URL (`main.py`, `scripts/opencode_dark_proxy.py`)
+### 3. Deep-link embed URL (`main.py`)
 - `/api/opencode/status` and `/launch` return
-  `embed_url = {proxy}/?directory={urlencoded repo path}`
-- The proxy injects OpenCode's official deep-entry protocol into the page
-  when that query is present: `window.__OPENCODE__.deepLinks =
-  ["opencode://new-session?directory=..."]` - the SPA boots straight into a
-  new session in the workspace instead of its session-picker portal. Bare
-  loads (no query) are injected with theme/mono only
+  `embed_url = {proxy}/{base64url(repo path)}/session`
+- OpenCode's SPA uses path-based routing: that route opens the workspace's
+  console directly and resumes the browser's last session for it, skipping
+  the session-picker home screen
+- Investigated alternatives that do NOT work in the web build (kept here to
+  avoid re-litigating): `?directory=` query params only feed the desktop
+  `opencode://` protocol handler, which is gated behind `isLocal()`; there is
+  no `/api/config` or `/api/project/current` route on the web server
 
 ### 4. Stale OFFLINE banner fix (`static/index.html`, `static/terminal.css`, `static/terminal.js`)
 - Root cause of the phantom OFFLINE strip: `.opencode-offline { display:flex }`

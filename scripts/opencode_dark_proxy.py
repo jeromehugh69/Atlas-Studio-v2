@@ -12,12 +12,10 @@ Run: python scripts/opencode_dark_proxy.py [--port 8096] [--target http://127.0.
 from __future__ import annotations
 
 import argparse
-import json
 import sys
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib import request as urlrequest
 from urllib.error import HTTPError, URLError
-from urllib.parse import parse_qs, quote, urlsplit
 
 TARGET = "http://127.0.0.1:4096"
 
@@ -38,26 +36,9 @@ MONO_STYLE = (
 )
 
 
-def _deep_link_script(path: str) -> str:
-    """OpenCode's official deep-entry protocol: window.__OPENCODE__.deepLinks.
-
-    When the page is loaded with ?directory=<path>, inject a new-session deep
-    link so the SPA boots straight into that workspace instead of its
-    session-picker portal. Without the query param, inject nothing.
-    """
-    directory = (parse_qs(urlsplit(path).query).get("directory") or [""])[0]
-    if not directory:
-        return ""
-    link = f"opencode://new-session?directory={quote(directory, safe='')}"
-    return (
-        "<script>window.__OPENCODE__=Object.assign({},window.__OPENCODE__,"
-        f"{{deepLinks:[{json.dumps(link)}]}});</script>"
-    )
-
-
-def _patch_html(html: str, extra: str = "") -> str:
+def _patch_html(html: str) -> str:
     head = "<head>"
-    inject = THEME_SCRIPT + MONO_STYLE + extra
+    inject = THEME_SCRIPT + MONO_STYLE
     if head in html:
         return html.replace(head, head + inject, 1)
     return inject + html
@@ -96,7 +77,7 @@ class ProxyHandler(BaseHTTPRequestHandler):
 
         if "text/html" in content_type:
             text = payload.decode("utf-8", errors="replace")
-            payload = _patch_html(text, _deep_link_script(self.path)).encode("utf-8")
+            payload = _patch_html(text).encode("utf-8")
 
         self.send_response(status)
         self.send_header("Content-Type", content_type)
