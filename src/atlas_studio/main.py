@@ -724,8 +724,11 @@ async def favicon():
 
 
 @app.post("/api/auth/bootstrap")
-async def auth_bootstrap():
+async def auth_bootstrap(request: Request):
     """Create a session for the local owner. Returns the owner token for Bearer auth."""
+    client_host = request.client.host if request.client else ""
+    if client_host not in ("127.0.0.1", "::1", "localhost"):
+        raise HTTPException(status_code=403, detail="owner bootstrap is restricted to localhost access")
     store = get_session_store()
     token = store.get_owner_token()
     return {"owner_token": token, "role": "owner"}
@@ -744,7 +747,7 @@ async def auth_validate(request: Request):
         if store.validate_owner_token(tok):
             return {"valid": True, "role": "owner", "method": "owner-token"}
         from .config import get_settings
-        if tok == get_settings().worker_token:
+        if secrets.compare_digest(tok, get_settings().worker_token):
             return {"valid": True, "role": "admin", "method": "worker-token"}
     if cookie:
         session = store.validate(cookie)
@@ -2662,7 +2665,7 @@ async def set_kill_switch(request: Request, enabled: bool = True):
     auth = request.headers.get("authorization", "")
     store_s = get_session_store()
     if auth.startswith("Bearer "):
-        if store_s.validate_owner_token(auth[7:]) or auth[7:] == settings.worker_token:
+        if store_s.validate_owner_token(auth[7:]) or secrets.compare_digest(auth[7:], settings.worker_token):
             auth_ok = True
     elif cookie:
         session = store_s.validate(cookie)

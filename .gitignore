@@ -16,3 +16,7 @@ proxy_err.log
 tools/
 tui.log
 tui_err.log
+.env.standalone
+all_chats_backup.json
+session_history.json
+*.jsonl

@@ -1,5 +1,6 @@
 from functools import lru_cache
 from pathlib import Path
+import secrets
 from typing import Literal
 
 from pydantic import Field, model_validator
@@ -44,9 +45,9 @@ class Settings(BaseSettings):
     opencode_proxy_url: str = "http://127.0.0.1:8096"
     opencode_tui_url: str = "http://127.0.0.1:7681"
     opencode_cwd: Path = Path(".")
-    worker_token: str = "atlas-local-worker"
+    worker_token: str = Field(default_factory=lambda: secrets.token_urlsafe(32))
     research_worker_url: str = "http://localhost:8093"
-    research_worker_token: str = "atlas-local-research"
+    research_worker_token: str = Field(default_factory=lambda: secrets.token_urlsafe(32))
     upload_max_mb: int = Field(25, ge=1, le=1024)
     max_body_size_mb: int = Field(10, ge=1, le=100)
     telemetry_enabled: bool = False
