@@ -2778,7 +2778,7 @@ async def synthesize_local_speech(body: SpeechSynthesisRequest):
     # Try ChatterboxTTS first (local CPU), cloned to the configured female reference voice
     try:
         voice_prompt = resolve_tts_audio_prompt(settings.tts_audio_prompt)
-        audio_bytes = await asyncio.to_thread(chatterbox_synthesize, spoken_text, 0.5, 0.5, voice_prompt)
+        audio_bytes = await asyncio.to_thread(chatterbox_synthesize, spoken_text, settings.tts_exaggeration, settings.tts_cfg_weight, voice_prompt)
         event = AuditEvent(
             action="speech.synthesize", actor="Atlas", target="local-speaker",
             outcome="completed", details={"source_characters": len(body.text), "spoken_characters": len(spoken_text), "backend": "chatterbox", "voice_prompt": str(voice_prompt or "default")},

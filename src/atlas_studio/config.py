@@ -52,6 +52,8 @@ class Settings(BaseSettings):
     stt_url: str = ""
     tts_url: str = ""
     tts_audio_prompt: str = ""  # Empty = auto-use bundled female reference voice
+    tts_exaggeration: float = Field(0.4, ge=0.25, le=2.0)  # Low = calm, smooth delivery
+    tts_cfg_weight: float = Field(0.35, ge=0.0, le=1.0)  # Low = slower, smoother pacing
     avatar_local_enabled: bool = False
     avatar_provider: Literal["triposr-local"] = "triposr-local"
     avatar_service_url: str = "http://localhost:8090"
