@@ -13,6 +13,8 @@ const attachButton = document.getElementById("attachButton");
 const codeButton = document.getElementById("codeButton");
 const attachmentTray = document.getElementById("attachmentTray");
 const clearButton = document.getElementById("clearButton");
+const voiceToggle = document.getElementById("voiceToggle");
+const voiceTestPanel = document.getElementById("voiceTestPanel");
 const voiceElapsed = document.getElementById("voiceElapsed");
 const voiceStatus = document.getElementById("voiceStatus");
 const voiceSessionLabel = document.getElementById("voiceSessionLabel");
@@ -577,6 +579,8 @@ async function handleCommitCommand(text) {
   }
 }
 
+const CHAT_CONTEXT_MESSAGES = 40;
+
 function chatSessionId() {
   let id = window.localStorage.getItem("atlasChatSession");
   if (!id) {
@@ -587,14 +591,16 @@ function chatSessionId() {
 }
 
 async function restoreChatHistory() {
-  if (conversationTurns.length) return;
+  if (conversationTurns.length || transcript.childElementCount) return;
   try {
     const response = await fetch(`/api/chat/history/${encodeURIComponent(chatSessionId())}`);
     if (!response.ok) return;
     const data = await response.json();
-    const recent = (data.messages || []).slice(-8);
+    const recent = (data.messages || []).slice(-CHAT_CONTEXT_MESSAGES);
     for (const item of recent) {
-      conversationTurns.push({ role: item.role === "user" ? "user" : "atlas", text: item.content });
+      const role = item.role === "user" ? "user" : "atlas";
+      conversationTurns.push({ role, text: item.content });
+      addMessage(role, item.content);
     }
   } catch (_) {
     // History is an enhancement; ignore restore failures.
@@ -848,7 +854,7 @@ async function runTurn(text, generation = sessionGeneration, resumeAfter = sessi
       const explanation = task.output || `I recommend delegating this to ${task.delegation.agent}.`;
       setPendingMessage(ensurePending(), explanation, true);
       conversationTurns.push({ role: "user", text: text.trim() }, { role: "atlas", text: explanation });
-      conversationTurns = conversationTurns.slice(-8);
+      conversationTurns = conversationTurns.slice(-CHAT_CONTEXT_MESSAGES);
 
       const agentName = task.delegation.agent;
       const taskBrief = (task.delegation.task || "").slice(0, 120);
@@ -888,7 +894,7 @@ async function runTurn(text, generation = sessionGeneration, resumeAfter = sessi
         const answer = result.output || `Task ${result.status}.`;
         setPendingMessage(ensurePending(), answer, true);
         conversationTurns.push({ role: "atlas", text: answer });
-        conversationTurns = conversationTurns.slice(-8);
+        conversationTurns = conversationTurns.slice(-CHAT_CONTEXT_MESSAGES);
       } catch (delegateError) {
         const statusEl = card.querySelector(".delegation-card-status");
         if (statusEl) statusEl.innerHTML = `<span style="color:#e65a5a;">&#10007;</span> Failed`;
@@ -901,7 +907,7 @@ async function runTurn(text, generation = sessionGeneration, resumeAfter = sessi
         throw new Error(answer);
       }
       conversationTurns.push({ role: "user", text: text.trim() }, { role: "atlas", text: answer });
-      conversationTurns = conversationTurns.slice(-8);
+      conversationTurns = conversationTurns.slice(-CHAT_CONTEXT_MESSAGES);
       try {
         await sentenceSpeaker.finish(answer);
         setPendingMessage(ensurePending(), answer, true);
@@ -1012,10 +1018,26 @@ composer.addEventListener("submit", async event => {
   await runTurn(text, sessionGeneration, sessionActive);
 });
 clearButton.addEventListener("click", () => {
+  const oldSessionId = chatSessionId();
   transcript.innerHTML = "";
   conversationTurns = [];
-  fetch(`/api/chat/history/${encodeURIComponent(chatSessionId())}`, { method: "DELETE" }).catch(() => {});
+  fetch(`/api/chat/history/${encodeURIComponent(oldSessionId)}`, { method: "DELETE" }).catch(() => {});
+  window.localStorage.removeItem("atlasChatSession");
 });
+if (voiceToggle && voiceTestPanel) {
+  if (window.localStorage.getItem("atlasVoiceDock") === "open") {
+    voiceTestPanel.hidden = false;
+    voiceToggle.setAttribute("aria-expanded", "true");
+    voiceToggle.closest(".interaction-dock")?.classList.add("voice-open");
+  }
+  voiceToggle.addEventListener("click", () => {
+    const open = voiceTestPanel.hidden;
+    voiceTestPanel.hidden = !open;
+    voiceToggle.setAttribute("aria-expanded", String(open));
+    voiceToggle.closest(".interaction-dock")?.classList.toggle("voice-open", open);
+    window.localStorage.setItem("atlasVoiceDock", open ? "open" : "closed");
+  });
+}
 window.addEventListener("beforeunload", deactivateSession);
 window.addEventListener("message", event => {
   if (![location.origin, parentOrigin, "http://localhost:8080"].includes(event.origin)) return;

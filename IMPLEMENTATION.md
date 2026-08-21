@@ -439,6 +439,19 @@ A standalone increment is complete only when:
 
 ## 9. Recent Progress
 
+### Chat UI Sizing, Scroll Fix, and Session Memory (2026-08-21)
+
+**Document:** [`docs/changes/007-chat-ui-sizing-scroll-memory.md`](docs/changes/007-chat-ui-sizing-scroll-memory.md)
+
+**Summary:**
+- Chat panel resized to industry standards: 14px message text, 760px bubble cap, larger composer/buttons, compact header
+- User-controlled sizing: drag-to-resize (vertical) + maximize button (Escape restores)
+- Dashboard body scrolls as one page; all overview cards flow at natural height together; chat stays docked sticky at full viewport height
+- Voice test panel collapsed behind a "Voice" toggle (preference persisted)
+- Atlas remembers 40 messages of context per session; restored history renders in the feed on reload; "New session" button resets feed, storage, and session id
+
+**Status:** Completed
+
 ### Status Report Cards in Chat Feed (2026-08-21)
 
 **Document:** [`docs/changes/006-status-report-cards.md`](docs/changes/006-status-report-cards.md)

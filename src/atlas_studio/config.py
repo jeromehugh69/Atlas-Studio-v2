@@ -30,6 +30,7 @@ class Settings(BaseSettings):
     model_thinking_tokens: int = Field(4096, ge=0, le=32768)
     model_connect_retries: int = Field(3, ge=0, le=10)
     chat_history_dir: Path = Path("./data/chat_history")
+    chat_context_messages: int = Field(40, ge=1, le=200)
     forge_timeout_seconds: int = Field(300, ge=60, le=1800)
     forge_max_tokens: int = Field(2048, ge=256, le=16384)
     forge_context_tokens: int = Field(4096, ge=2048, le=32768)

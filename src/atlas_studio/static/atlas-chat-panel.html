@@ -22,7 +22,7 @@
         <h1>ATLAS AI ASSISTANT</h1>
         <span id="avatarState" class="avatar-state"><i></i><span>AI ONLINE</span></span>
       </div>
-      <button id="clearButton" class="clear-button" type="button">Clear feed</button>
+      <button id="clearButton" class="clear-button" type="button">New session</button>
     </header>
 
     <section class="status-rail" aria-label="Atlas status">
@@ -56,6 +56,7 @@
           <div><span class="section-kicker">ENGINEER INPUT</span><strong>Direct Atlas</strong></div>
           <div class="context-meter" title="Available workspace context">
             <span>AI CONTEXT</span><i><b id="contextMeter"></b></i><strong id="contextUsage">42%</strong>
+            <button id="voiceToggle" class="voice-toggle" type="button" aria-expanded="false" aria-controls="voiceTestPanel" title="Show or hide the voice test panel">&#127908; Voice</button>
           </div>
         </div>
         <div id="attachmentTray" class="attachment-tray" hidden></div>
@@ -75,7 +76,7 @@
         <p class="example-prompt">Example: “Inspect the authentication flow and explain why the developer tool creation request returns 403.”</p>
       </div>
 
-      <aside class="voice-test" aria-label="Test voice with Atlas">
+      <aside id="voiceTestPanel" class="voice-test" aria-label="Test voice with Atlas" hidden>
         <header><span class="section-kicker">VOICE TEST</span><strong>TEST VOICE WITH ATLAS</strong></header>
         <div class="voice-session-state">
           <span id="voiceSessionLabel">VOICE READY</span>

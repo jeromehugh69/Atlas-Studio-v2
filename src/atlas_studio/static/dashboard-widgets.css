@@ -276,11 +276,12 @@ body.command-active > .app-main {
   min-width: 0;
   margin: 0;
   padding: 12px;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 body.command-active .page-header { display: none; }
-body.command-active #command.view.active { display: block; width: 100%; height: 100%; }
+body.command-active #command.view.active { display: block; width: 100%; height: auto; min-height: 100%; }
 .command-site-links {
   display: flex;
   align-items: center;
@@ -311,20 +312,48 @@ body.command-active #command.view.active { display: block; width: 100%; height: 
   display: grid;
   grid-template-columns: minmax(0, 1fr) 302px;
   gap: 12px;
+  align-items: start;
   width: 100%;
-  height: calc(100% - 46px);
-  min-height: 0;
 }
 
 .assistant-workspace {
+  position: sticky;
+  top: 12px;
+  height: calc(100vh - 24px);
   min-width: 0;
-  min-height: 0;
+  min-height: 540px;
+  resize: vertical;
   overflow: hidden;
   border: 1px solid var(--command-line);
   border-radius: 11px;
   background: var(--command-panel);
   box-shadow: 0 18px 48px rgba(0, 0, 0, .24), inset 0 1px 0 rgba(255, 255, 255, .018);
 }
+
+body.chat-maximized .assistant-workspace {
+  position: fixed;
+  inset: 12px;
+  z-index: 80;
+  height: auto !important;
+  max-height: none;
+}
+
+.chat-maximize {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  z-index: 5;
+  width: 30px;
+  height: 26px;
+  padding: 0;
+  border: 1px solid var(--command-line-soft);
+  border-radius: 7px;
+  color: #8fa4ca;
+  background: rgba(7, 13, 25, .82);
+  font: 700 12px/1 ui-monospace, monospace;
+  cursor: pointer;
+}
+.chat-maximize:hover { color: #d4f7ff; border-color: rgba(85, 217, 255, .48); }
 
 .assistant-workspace iframe {
   display: block;
@@ -336,18 +365,14 @@ body.command-active #command.view.active { display: block; width: 100%; height: 
 
 .command-rail {
   display: grid;
-  grid-template-rows: minmax(200px, .85fr) minmax(180px, .85fr) minmax(160px, .7fr) minmax(160px, .7fr);
+  grid-template-rows: repeat(4, auto);
   gap: 12px;
   min-width: 0;
-  min-height: 0;
-  overflow-y: auto;
-  scrollbar-width: thin;
-  scrollbar-color: #1d3557 transparent;
 }
 
 .rail-panel {
-  min-height: 0;
-  overflow: hidden;
+  min-height: 180px;
+  overflow: visible;
   padding: 13px;
   border: 1px solid var(--command-line);
   border-radius: 10px;
@@ -460,8 +485,6 @@ body.command-active #command.view.active { display: block; width: 100%; height: 
 }
 
 .activity-panel .activity {
-  max-height: calc(100% - 23px);
-  overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: #1d3557 transparent;
 }
@@ -727,6 +750,10 @@ body.command-active #analytics.view.active {
 .agent-dialog footer button { padding: 9px 14px; border: 1px solid #2c3b58; border-radius: 7px; color: #94a6c8; background: #101a2b; font: 700 10px/1 Inter, sans-serif; cursor: pointer; }
 .agent-dialog footer button[type="submit"] { border-color: #6558d7; color: #fff; background: linear-gradient(135deg, #4b55cb, #6339a9); }
 
+@media (max-width: 1400px) {
+  .command-cockpit { grid-template-columns: minmax(0, 1fr) 270px; }
+}
+
 @media (max-width: 1160px) {
   body.command-active { grid-template-columns: 214px minmax(0, 1fr); }
   .command-cockpit { grid-template-columns: minmax(0, 1fr) 255px; }
@@ -749,9 +776,9 @@ body.command-active #analytics.view.active {
   body.command-active > .app-main { height: auto; min-height: calc(100vh - 82px); padding: 10px; }
   body.command-active #command.view.active { min-height: calc(100vh - 102px); }
   body.command-active #analytics.view.active { min-height: calc(100vh - 102px); overflow: visible; }
-  .command-cockpit { grid-template-columns: 1fr; min-height: 950px; height: auto; }
-  .assistant-workspace { min-height: 700px; }
-  .command-rail { grid-template-columns: repeat(3, 1fr); grid-template-rows: 220px; }
+  .command-cockpit { grid-template-columns: 1fr; min-height: 950px; }
+  .assistant-workspace { position: static; height: auto; min-height: 700px; }
+  .command-rail { grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(2, 220px); }
   .metrics-board { grid-template-columns: repeat(6, minmax(0, 1fr)); }
   .task-performance-panel, .service-health-panel, .model-runtime-panel,
   .governance-panel, .security-panel, .resources-panel { grid-column: span 3; }

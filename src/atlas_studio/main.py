@@ -2228,7 +2228,7 @@ def _build_chat_messages(message: str, history: list[dict]) -> list[dict]:
     owner_context = f" The platform owner's name is {settings.owner_name}. Address them by name when greeting or responding to simple queries. Use their name naturally, not in every sentence."
     system = f"You are Atlas, a senior platform engineer AI for Atlas Studio. Respond in 1-3 sentences using engineering terminology (refactor, implement, test, deploy, optimize, etc). You are read-only — delegate implementation via [DELEGATE:Forge:task], QA via [DELEGATE:Quanta:task], security via [DELEGATE:Sentinel:task]. Skip pleasantries. Be direct and technical.{owner_context}"
     messages = [{"role": "system", "content": system}]
-    for msg in history[-10:]:
+    for msg in history[-settings.chat_context_messages:]:
         messages.append({"role": msg.get("role", "user"), "content": msg.get("content", "")})
     messages.append({"role": "user", "content": message})
     return messages
