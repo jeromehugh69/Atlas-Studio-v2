@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from pathlib import Path
 from datetime import date
 
@@ -366,8 +367,29 @@ def font(path, size):
         return ImageFont.load_default()
 
 
-REGULAR = "C:/Windows/Fonts/arial.ttf"
-BOLD = "C:/Windows/Fonts/arialbd.ttf"
+def _system_font(*names):
+    search_dirs = []
+    if os.environ.get("WINDIR"):
+        search_dirs.append(Path(os.environ["WINDIR"]) / "Fonts")
+    search_dirs.extend([
+        Path("/usr/share/fonts/truetype/dejavu"),
+        Path("/usr/share/fonts/truetype/liberation"),
+        Path("/System/Library/Fonts"),
+        Path("/Library/Fonts"),
+    ])
+    for directory in search_dirs:
+        for name in names:
+            candidate = directory / name
+            if candidate.exists():
+                return str(candidate)
+    return None
+
+
+_REGULAR = _system_font("arial.ttf", "DejaVuSans.ttf", "LiberationSans-Regular.ttf", "Helvetica.ttc")
+_BOLD = _system_font("arialbd.ttf", "DejaVuSans-Bold.ttf", "LiberationSans-Bold.ttf", "Helvetica Bold.ttf")
+FALLBACK_FONT = ImageFont.load_default()
+REGULAR = _REGULAR or FALLBACK_FONT
+BOLD = _BOLD or REGULAR or FALLBACK_FONT
 
 
 def canvas(title, subtitle="", w=1800, h=980):
