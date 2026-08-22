@@ -411,9 +411,9 @@ def test_overview_cards_are_reorderable_accessible_and_persisted():
 
     assert 'id="commandDashboard"' in page.text
     assert 'id="resetDashboardLayout"' in page.text
-    for widget_id in ("task-orchestrator", "active-tasks", "atlas-status"):
+    for widget_id in ("task-orchestrator", "active-tasks", "atlas-status", "speed-metric"):
         assert f'data-widget-id="{widget_id}"' in page.text
-    assert page.text.count('class="widget-handle"') == 3
+    assert page.text.count('class="widget-handle"') == 4
     assert 'aria-grabbed="false"' in page.text
     assert "DASHBOARD_LAYOUT_KEY" in script.text
     assert "localStorage.setItem" in script.text

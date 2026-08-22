@@ -552,7 +552,6 @@ async function handleCommitCommand(text) {
   const message = match[2] || `Atlas commit: ${match[3]}`;
   const changeSetId = match[3] || match[1];
 
-  addMessage("system", `Initiating commit for change set ${changeSetId}...`);
   setAvatarMode("thinking", "COMMITTING", "Preparing governed commit with approval...");
 
   try {

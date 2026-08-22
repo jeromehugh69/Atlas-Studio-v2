@@ -476,9 +476,11 @@ async def execute(task: Task, user_authorized: bool = False):
             await infrastructure.persist_audit(specialist_event)
             specialist_reasoning, specialist_clean = _extract_reasoning(specialist_output)
             specialist_clean = _deduplicate_response(specialist_clean) or specialist_output
+            specialist_domains = {"Quanta": "QA", "Interface": "UI inspection"}
+            specialist_domain = specialist_domains.get(specialist.name, "investigation")
             result = {
                 "status": "completed" if evidence_refs else "failed",
-                "output": specialist_clean,
+                "output": f"{specialist.name} read-only {specialist_domain} report\n\n{specialist_clean}",
                 "reasoning": specialist_reasoning,
                 "grounding_status": "grounded" if evidence_refs else "blocked",
                 "grounding_issues": [] if evidence_refs else ["The delegated QA investigation produced no machine-recorded workspace evidence."],
@@ -604,6 +606,9 @@ async def lifespan(app: FastAPI):
         for agent in persisted_agents:
             reconciled = False
             agent.system = agent.name in system_agent_names
+            if "development_lifecycle" not in agent.skills:
+                agent.skills.append("development_lifecycle")
+                reconciled = True
             if agent.name == "Atlas" and "atlas_request_intake" not in agent.skills:
                 agent.skills.append("atlas_request_intake")
                 reconciled = True
